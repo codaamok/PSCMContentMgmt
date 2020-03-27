@@ -2,6 +2,7 @@ function Set-DPAllowPrestagedContent {
     <#
     .SYNOPSIS
         Set a distribution point to only receive prestaged content
+        TODO: create enabled boolean parameter to enable/disable prestage setting
     #>
     [CmdletBinding()]
     param (
