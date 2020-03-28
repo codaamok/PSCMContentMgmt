@@ -53,6 +53,8 @@ function Get-DPContentDistributionStatus {
         $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
         $Query = "SELECT PackageID,PackageType,State,SourceVersion FROM SMS_PackageStatusDistPointsSummarizer WHERE ServerNALPath like '%{0}%'" -f $DistributionPoint
 
+        # Add filters like in Get-DPContent
+
         Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
             [PSCustomObject]@{
                 PSTypeName        = "PSCMContentMgmt"
