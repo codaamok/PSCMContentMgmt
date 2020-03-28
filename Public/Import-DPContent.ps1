@@ -46,7 +46,13 @@ function Import-DPContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\>
+        PS C:\> Import-DPContent -Folder "F:\prestaged"
+
+        Imports .pkgx files found in F:\prestaged but only if the objects are in "pending" state.
+    .EXAMPLE
+        PS C:\> Import-DPContent -Folder "\\server\share\prestaged" -ImportAllFromFolder
+
+        Imports all .pkgx files found in \\server\share\prestaged.
     #>
     [CmdletBinding()]
     param (
