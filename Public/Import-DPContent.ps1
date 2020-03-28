@@ -197,7 +197,7 @@ function Import-DPContent {
         else {
             foreach ($ObjPackage in $ObjPackagesPending) {
                 # All of the object type values between SMS_DPContentInfo and SMS_PackageStatusDistPointsSummarizer are similar except for Application
-                $ObjectType = ([SMS_DPContentInfo]([SMS_PackageStatusDistPointsSummarizer]$ObjPackage.PackageType).ToString()).value__
+                $ObjectType = ([SMS_DPContentInfo]([SMS_PackageStatusDistPointsSummarizer_PackageType]$ObjPackage.PackageType).ToString()).value__
     
                 if ($ObjectType -eq [SMS_DPContentInfo]"Application") {
                     $ObjectID = ConvertTo-PackageIDCIID -PackageID $ObjPackage.PackageID
