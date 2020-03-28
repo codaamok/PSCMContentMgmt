@@ -8,9 +8,11 @@ function Export-DPContent {
         Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to export content from.
     .PARAMETER ObjectID
         Unique ID of the content object you want to export.
+
         For Applications the ID must be the CI_ID value whereas for all other content objects the ID is PackageID.
     .PARAMETER ObjectType
         Object type of the content object you want to export.
+
         Can be one of the following values: "Package", "DriverPackage", "DeploymentPackage", "OperatingSystemImage", "OperatingSystemInstaller", "BootImage", "Application"
     .PARAMETER Folder
         The target directory to store the generated .pkgx files in.
@@ -18,11 +20,15 @@ function Export-DPContent {
         Specify this switch to overwrite .pkgx files if they already exist in the target directory from -Folder
     .PARAMETER SiteServer
         Query SMS_DPContentInfo on this server.
+
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+
         Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
+
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
+        
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
         PS C:\> Get-DPContent -DistributionPoint "dp1.contoos.com" | Export-DPContent -Folder "E:\prestaged" -Force
