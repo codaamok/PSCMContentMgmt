@@ -4,6 +4,24 @@ function Get-DPContentDistributionStatus {
         Retrieve the content distribution status of all objects for a distribution point
     .PARAMETER DistributionPoint
         Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+    .PARAMETER Distributed
+        Filter on objects in distributed state
+    .PARAMETER DistributionPending
+        Filter on objects in distribution pending state
+    .PARAMETER DistributionRetrying
+        Filter on objects in distribution retrying state
+    .PARAMETER DistributionFailed
+        Filter on objects in distribution failed state
+    .PARAMETER RemovalPending
+        Filter on objects in removal pending state
+    .PARAMETER RemovalRetrying
+        Filter on objects in removal retrying state
+    .PARAMETER RemovalFailed
+        Filter on objects in removal failed state
+    .PARAMETER ContentUpdating
+        Filter on objects in content updating state
+    .PARAMETER ContentMonitoring
+        Filter on objects in content monitoring state
     .PARAMETER SiteServer
         Query SMS_DPContentInfo on this server.
 

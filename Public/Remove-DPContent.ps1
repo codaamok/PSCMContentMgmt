@@ -14,6 +14,10 @@ function Remove-DPContent {
         PS C:\> Get-DPContent -Package -DistributionPoint "dp1.contoso.com" | Remove-DPContent
 
         Removes all packages distributed to dp1.contoso.com.
+    .EXAMPLE
+        PS C:\> Get-DPContentDistributionState -DistributionPoint "dp1.contoso.com" -DistributionFailed | Remove-DPContent
+
+        Removes objects with content distribution status of "failed" distributed to dp1.contoso.com.
     #>
     [CmdletBinding()]
     param (
@@ -30,7 +34,7 @@ function Remove-DPContent {
         [String]$ObjectID,
 
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
-        [ValidateSet("Package", "DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
+        [ValidateSet("Package","DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
         [SMS_DPContentInfo]$ObjectType,
 
         [Parameter()]

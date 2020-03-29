@@ -58,7 +58,7 @@ function Export-DPContent {
         [String]$ObjectID,
 
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
-        [ValidateSet("Package", "DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
+        [ValidateSet("Package","DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
         [SMS_DPContentInfo]$ObjectType,
 
         [Parameter(Mandatory)]
