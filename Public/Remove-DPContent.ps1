@@ -90,7 +90,7 @@ function Remove-DPContent {
             ObjectType = $InputObject.ObjectType
         }
         
-        $Command = 'Remove-CMContentDistribution -DistributionPointName "{0}" -{1} "{2}" -Force -ErrorAction "Stop"' -f $DistributionPoint, [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID
+        $Command = 'Remove-CMContentDistribution -DistributionPointName "{0}" -{1} "{2}" -Force -ErrorAction "Stop"' -f $InputObject.DistributionPoint, [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID
         $ScriptBlock = [ScriptBlock]::Create($Command)
         try {
             Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
