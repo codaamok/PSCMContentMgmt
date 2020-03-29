@@ -102,6 +102,7 @@ function Export-DPContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
+        # TODO: verify the logic here: must it be within process { }? is checking for last DP necessary?
         if ($LastDP -ne $InputObject.DistributionPoint) {
             try {     
                 Resolve-DP -DistributionPoint $InputObject.DistributionPoint
