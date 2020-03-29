@@ -52,14 +52,6 @@ function Remove-DPContent {
                 DistributionPoint = $DistributionPoint
             }
         }
-        
-        try {
-            Resolve-DP -DistributionPoint $DistributionPoint
-        }
-        catch {
-            Write-Error -ErrorRecord $_
-            return
-        }
 
         $OriginalLocation = (Get-Location).Path
 
@@ -70,6 +62,19 @@ function Remove-DPContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
+        if ($LastDP -ne $InputObject.DistributionPoint) {
+            try {     
+                Resolve-DP -DistributionPoint $InputObject.DistributionPoint
+            }
+            catch {
+                Write-Error -ErrorRecord $_
+                return
+            }
+        }
+        else {
+            $LastDP = $InputObject.DistributionPoint
+        }
+
         if ($Confirm -eq $true) {
             $Title = "Removing {0} from '{1}'" -f $InputObject.ObjectID, $DistributionPoint
             $Question = "`nDo you want to remove '{0}' from distribution point '{1}'?" -f $InputObject.ObjectID, $DistributionPoint
