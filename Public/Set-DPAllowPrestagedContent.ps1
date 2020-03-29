@@ -30,10 +30,10 @@ function Set-DPAllowPrestagedContent {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
-        [String[]]$DistributionPoint,
+        [String]$DistributionPoint,
 
-        [Parameter(Mandatory)]
-        [Bool]$State,
+        [Parameter()]
+        [Bool]$State = $true,
 
         [Parameter()]
         [Bool]$Confirm = $true,
@@ -47,15 +47,6 @@ function Set-DPAllowPrestagedContent {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
-        $OriginalLocation = (Get-Location).Path
-
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
-            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
-    }
-    process {
         try {
             Resolve-DP -DistributionPoint $DistributionPoint
         }
@@ -74,6 +65,15 @@ function Set-DPAllowPrestagedContent {
             }
         }
 
+        $OriginalLocation = (Get-Location).Path
+
+        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
+            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
+        }
+
+        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
+    }
+    process {
         $result = [ordered]@{ DistributionPoint = $DistributionPoint }
         try {
             Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State

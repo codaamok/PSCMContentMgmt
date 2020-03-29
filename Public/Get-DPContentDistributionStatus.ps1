@@ -44,7 +44,7 @@ function Get-DPContentDistributionStatus {
         $OriginalLocation = (Get-Location).Path
 
         if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
-            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
+            [void](New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction "Stop")
         }
 
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
