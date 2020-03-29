@@ -76,7 +76,7 @@ function Remove-DPContent {
         }
 
         if ($Confirm -eq $true) {
-            $Title = "Removing {0} from '{1}'" -f $InputObject.ObjectID, $DistributionPoint
+            $Title = "Removing {0} ({1}) from '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $DistributionPoint
             $Question = "`nDo you want to remove '{0}' from distribution point '{1}'?" -f $InputObject.ObjectID, $InputObject.DistributionPoint
             $Choices = "&Yes", "&No"
             $Decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
