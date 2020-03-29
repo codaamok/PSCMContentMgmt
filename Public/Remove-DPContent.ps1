@@ -45,6 +45,14 @@ function Remove-DPContent {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
+        if ($PSCmdlet.ParameterSetName -ne "InputObject") {
+            $InputObject = [PSCustomObject]@{
+                ObjectID          = $ObjectID
+                ObjectType        = $ObjectType
+                DistributionPoint = $DistributionPoint
+            }
+        }
+        
         try {
             Resolve-DP -DistributionPoint $DistributionPoint
         }
@@ -60,14 +68,6 @@ function Remove-DPContent {
         }
 
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
-
-        if ($PSCmdlet.ParameterSetName -ne "InputObject") {
-            $InputObject = [PSCustomObject]@{
-                ObjectID          = $ObjectID
-                ObjectType        = $ObjectType
-                DistributionPoint = $DistributionPoint
-            }
-        }
     }
     process {
         if ($Confirm -eq $true) {
