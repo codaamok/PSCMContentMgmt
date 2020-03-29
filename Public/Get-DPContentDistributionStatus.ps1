@@ -17,8 +17,9 @@ function Get-DPContentDistributionStatus {
 
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
+        PS C:\> Get-DPContentDistributionStatus -DistributionPoint "dp1.contoso.com"
+
+        Gets the content distribution status for all objects on dp1.contoso.com.
     #>
     [CmdletBinding()]
     param (
