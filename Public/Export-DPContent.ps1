@@ -128,7 +128,10 @@ function Export-DPContent {
             }
         }
         
-        $result = [ordered]@{ ObjectID = $InputObject.ObjectID }
+        $result = [ordered]@{ 
+            ObjectID   = $InputObject.ObjectID
+            ObjectType = $InputObject.ObjectType
+        }
 
         $Command = 'Publish-CMPrestageContent -{0} "{1}" -DistributionPointName "{2}" -FileName "{3}"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $InputObject.DistributionPoint, $Path
         $ScriptBlock = [ScriptBlock]::Create($Command)

@@ -76,8 +76,8 @@ function Remove-DPContent {
         }
 
         if ($Confirm -eq $true) {
-            $Title = "Removing {0} ({1}) from '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint
-            $Question = "`nDo you want to remove '{0}' from distribution point '{1}'?" -f $InputObject.ObjectID, $InputObject.DistributionPoint
+            $Title = "Removing '{0}' ({1}) from '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint
+            $Question = "`nDo you want to remove '{0}' ({1}) from distribution point '{2}'?" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint
             $Choices = "&Yes", "&No"
             $Decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
             if ($Decision -eq 1) {
@@ -85,7 +85,10 @@ function Remove-DPContent {
             }
         }
 
-        $result = [ordered]@{ ObjectID = $InputObject.ObjectID }
+        $result = [ordered]@{ 
+            ObjectID   = $InputObject.ObjectID
+            ObjectType = $InputObject.ObjectType
+        }
         
         $Command = 'Remove-CMContentDistribution -DistributionPointName "{0}" -{1} "{2}" -Force -ErrorAction "Stop"' -f $DistributionPoint, [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID
         $ScriptBlock = [ScriptBlock]::Create($Command)

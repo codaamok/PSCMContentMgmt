@@ -125,7 +125,10 @@ function Start-DPContentDistribution {
                             ObjectType        = $Matches.ObjectType
                         }
     
-                        $result = [ordered]@{ ObjectID = $InputObject.ObjectID }
+                        $result = [ordered]@{ 
+                            ObjectID   = $InputObject.ObjectID
+                            ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
+                        }
 
                         $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
                         $ScriptBlock = [ScriptBlock]::Create($Command)
@@ -145,7 +148,10 @@ function Start-DPContentDistribution {
                 }
             }
             default {
-                $result = [ordered]@{ ObjectID = $InputObject.ObjectID }
+                $result = [ordered]@{ 
+                    ObjectID   = $InputObject.ObjectID
+                    ObjectType = $InputObject.ObjectType
+                }
                 $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {

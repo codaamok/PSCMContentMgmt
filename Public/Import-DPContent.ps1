@@ -178,7 +178,10 @@ function Import-DPContent {
         if ($ImportAllFromFolder.IsPresent -eq $true) {
             foreach ($File in $Files) {
                 if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
-                    $result = [ordered]@{ ObjectID = $Matches.ObjectID }
+                    $result = [ordered]@{ 
+                        ObjectID   = $Matches.ObjectID
+                        ObjectType = [SMS_DPContentInfo]$Matches.ObjectType
+                    }
                     try {
                         [void](Invoke-NativeCommand $ExtractContentExe /p:$($File.FullName) /F -ErrorAction "Stop")
                         $result["Result"] = "Success"
@@ -211,7 +214,10 @@ function Import-DPContent {
     
                 if (Test-Path $Path) {
                     Write-Verbose ("Importing '{0}'" -f $Path)
-                    $result = [ordered]@{ ObjectID = $ObjectID }
+                    $result = [ordered]@{ 
+                        ObjectID   = $ObjectID
+                        ObjectType = [SMS_DPContentInfo]$ObjectType
+                    }
                     try {
                         [void](Invoke-NativeCommand $ExtractContentExe /p:$Path /F -ErrorAction "Stop")
                         $result["Result"] = "Success"
