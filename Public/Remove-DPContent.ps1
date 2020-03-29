@@ -77,7 +77,7 @@ function Remove-DPContent {
 
         if ($Confirm -eq $true) {
             $Title = "Removing {0} from '{1}'" -f $InputObject.ObjectID, $DistributionPoint
-            $Question = "`nDo you want to remove '{0}' from distribution point '{1}'?" -f $InputObject.ObjectID, $DistributionPoint
+            $Question = "`nDo you want to remove '{0}' from distribution point '{1}'?" -f $InputObject.ObjectID, $InputObject.DistributionPoint
             $Choices = "&Yes", "&No"
             $Decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
             if ($Decision -eq 1) {
