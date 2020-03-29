@@ -27,6 +27,33 @@ function Get-DPContentDistributionStatus {
         [String]$DistributionPoint,
 
         [Parameter()]
+        [Switch]$Distributed,
+
+        [Parameter()]
+        [Switch]$DistributionPending,
+
+        [Parameter()]
+        [Switch]$DistributionRetrying,
+
+        [Parameter()]
+        [Switch]$DistributionFailed,
+
+        [Parameter()]
+        [Switch]$RemovalPending,
+
+        [Parameter()]
+        [Switch]$RemovalRetrying,
+
+        [Parameter()]
+        [Switch]$RemovalFailed,
+
+        [Parameter()]
+        [Switch]$ContentUpdating,
+
+        [Parameter()]
+        [Switch]$ContentMonitoring,
+
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [String]$SiteServer = $CMSiteServer,
         
@@ -54,7 +81,21 @@ function Get-DPContentDistributionStatus {
         $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
         $Query = "SELECT PackageID,PackageType,State,SourceVersion FROM SMS_PackageStatusDistPointsSummarizer WHERE ServerNALPath like '%{0}%'" -f $DistributionPoint
 
-        # Add filters like in Get-DPContent
+        $conditions = switch ($true) {
+            $Distributed            { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTED" }
+            $DistributionPending    { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_PENDING" }
+            $DistributionRetrying   { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_RETRYING" }
+            $DistributionFailed     { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_FAILED" }
+            $RemovalPending         { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_PENDING" }
+            $RemovalRetrying        { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_RETRYING" }
+            $RemovalFailed          { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_FAILED" }
+            $ContentUpdating        { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"CONTENT_UPDATING" }
+            $ContentMonitoring      { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"CONTENT_MONITORING" }
+        }
+
+        if ($conditions) {
+            $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
+        }
 
         Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
             [PSCustomObject]@{

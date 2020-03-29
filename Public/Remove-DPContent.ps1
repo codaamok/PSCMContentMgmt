@@ -11,7 +11,9 @@ function Remove-DPContent {
     .PARAMETER ObjectType
         Description here
     .EXAMPLE 
-        PS C:\> 
+        PS C:\> Get-DPContent -Package -DistributionPoint "dp1.contoso.com" | Remove-DPContent
+
+        Removes all packages distributed to dp1.contoso.com.
     #>
     [CmdletBinding()]
     param (
