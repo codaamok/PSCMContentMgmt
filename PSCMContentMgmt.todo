@@ -1,2 +1,5 @@
 TODO: comment based help on all functions
 TODO: perhaps jobs on Export-DPContent
+TODO: ContentLibraryCleanup.exe (oh go on then)
+TODO: add parameter aliases
+TODO: add validatenotnullorempty() parameter attribute to parameters needing it
