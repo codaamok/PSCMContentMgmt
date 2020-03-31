@@ -81,7 +81,7 @@ function Get-DPContentDistributionStatus {
     )
     begin {
         try {
-            Resolve-DP -DistributionPoint $DistributionPoint
+            Resolve-DP -Name $DistributionPoint
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)

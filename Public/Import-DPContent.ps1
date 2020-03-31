@@ -107,7 +107,7 @@ function Import-DPContent {
         $DistributionPoint = [System.Net.Dns]::GetHostByName($env:ComputerName).HostName        
 
         try {
-            Resolve-DP -DistributionPoint $DistributionPoint
+            Resolve-DP -Name $DistributionPoint
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)

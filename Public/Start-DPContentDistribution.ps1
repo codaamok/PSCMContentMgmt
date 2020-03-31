@@ -49,24 +49,23 @@ function Start-DPContentDistribution {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObject")]
+        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObjectDP")]
+        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObjectDPG")]
         [PSTypeName('PSCMContentMgmt')]
         [PSCustomObject]$InputObject,
 
-        [Parameter(Mandatory, ParameterSetName="InputObject")]
-        [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
-        [Parameter(Mandatory, ParameterSetName="Folder")]
-        [String]$DistributionPoint,
-
-        [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
+        [Parameter(Mandatory, ParameterSetName="PropertiesDP")]
+        [Parameter(Mandatory, ParameterSetName="PropertiesDPG")]
         [ValidateNotNullOrEmpty()]
         [String]$ObjectID,
 
-        [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
+        [Parameter(Mandatory, ParameterSetName="PropertiesDP")]
+        [Parameter(Mandatory, ParameterSetName="PropertiesDPG")]
         [ValidateSet("Package","DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
         [SMS_DPContentInfo]$ObjectType,
 
-        [Parameter(Mandatory, ParameterSetName="Folder")]
+        [Parameter(Mandatory, ParameterSetName="FolderDP")]
+        [Parameter(Mandatory, ParameterSetName="FolderDPG")]
         [ValidateScript({
             if (!([System.IO.Directory]::Exists($_))) {
                 throw "Invalid path or access denied"
@@ -78,6 +77,16 @@ function Start-DPContentDistribution {
         })]
         [String]$Folder,
 
+        [Parameter(Mandatory, ParameterSetName="InputObjectDP")]
+        [Parameter(Mandatory, ParameterSetName="PropertiesDP")]
+        [Parameter(Mandatory, ParameterSetName="FolderDP")]
+        [String]$DistributionPoint,
+
+        [Parameter(Mandatory, ParameterSetName="InputObjectDPG")]
+        [Parameter(Mandatory, ParameterSetName="PropertiesDPG")]
+        [Parameter(Mandatory, ParameterSetName="FolderDPG")]
+        [String]$DistributionPointGroup,
+
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [String]$SiteServer = $CMSiteServer,
@@ -88,21 +97,28 @@ function Start-DPContentDistribution {
     )
     begin {
         try {
-            Resolve-DP -DistributionPoint $DistributionPoint
+            switch -Regex ($PSCmdlet.ParameterSetName) {
+                "DPG$" {
+                    Resolve-DPGroup -Name $DistributionPointGroup
+                }
+                "DP$" {
+                    Resolve-DP -Name $DistributionPoint
+                }
+            }
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
 
-        switch ($PSCmdlet.ParameterSetName) {
-           "InputObject" { }
-           "SpecifyProperties" {
+        switch -Regex ($PSCmdlet.ParameterSetName) {
+           "InputObjectDP|InputObjectDPG" { }
+           "PropertiesDP|PropertiesDPG" {
                 $InputObject = [PSCustomObject]@{
                     ObjectID          = $ObjectID
                     ObjectType        = $ObjectType
                 }
             }
-            "Folder" {
+            "FolderDP|FolderDPG" {
                 $Files = Get-ChildItem -Path $Folder -Filter "*.pkgx"
             }
         }
@@ -116,8 +132,8 @@ function Start-DPContentDistribution {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        switch ($PScmdlet.ParameterSetName) {
-            "Folder" {
+        switch -Regex ($PSCmdlet.ParameterSetName) {
+            "FolderDP|FolderDPG" {
                 foreach ($File in $FIles) {
                     if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
                         $InputObject = [PSCustomObject]@{
@@ -130,6 +146,7 @@ function Start-DPContentDistribution {
                             ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
                         }
 
+                        #TODO: add DP group support here
                         $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
                         $ScriptBlock = [ScriptBlock]::Create($Command)
                         try {
@@ -152,6 +169,7 @@ function Start-DPContentDistribution {
                     ObjectID   = $InputObject.ObjectID
                     ObjectType = $InputObject.ObjectType
                 }
+                #TODO: add DP group support here
                 $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {

@@ -48,7 +48,7 @@ function Set-DPAllowPrestagedContent {
     )
     begin {
         try {
-            Resolve-DP -DistributionPoint $DistributionPoint
+            Resolve-DP -Name $DistributionPoint
         }
         catch {
             Write-Error -ErrorRecord $_

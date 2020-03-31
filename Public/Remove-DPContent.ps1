@@ -78,7 +78,7 @@ function Remove-DPContent {
     process {
         if ($LastDP -ne $InputObject.DistributionPoint) {
             try {     
-                Resolve-DP -DistributionPoint $InputObject.DistributionPoint
+                Resolve-DP -Name $InputObject.DistributionPoint
             }
             catch {
                 Write-Error -ErrorRecord $_

@@ -1,7 +1,7 @@
-function Resolve-DP {
+function Resolve-DPGroup {
     <#
     .SYNOPSIS
-        Validate whether a given host is a distribution point within a Configuration Manager site
+        Validate whether a distribution point group exists within a Configuration Manager site
     #>
     [CmdletBinding()]
     param (
@@ -27,9 +27,9 @@ function Resolve-DP {
     }
     process {
         try {
-            $Obj = Get-CMDistributionPoint -Name $Name -AllSite -ErrorAction "Stop"
+            $Obj = Get-CMDistributionPointGroup -Name $Name -ErrorAction "Stop"
             if (-not $Obj) {
-                throw ("Distribution point '{0}' does not exist" -f $Name)
+                throw ("Distribution point group '{0}' does not exist" -f $Name)
             }
         }
         catch {

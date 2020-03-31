@@ -41,7 +41,7 @@ function Compare-DPContent {
     )
     begin {
         try {
-            Resolve-DP -DistributionPoint $Source, $Target
+            Resolve-DP -Name $Source, $Target
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
