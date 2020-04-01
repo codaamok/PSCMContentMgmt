@@ -104,10 +104,19 @@ function Import-DPContent {
             $PSCmdlet.ThrowTerminatingError($ErrorRecord)
         }
 
+        switch ($null) {
+            $SiteCode {
+                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+            $SiteServer {
+                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+        }
+
         $DistributionPoint = [System.Net.Dns]::GetHostByName($env:ComputerName).HostName        
 
         try {
-            Resolve-DP -Name $DistributionPoint
+            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -203,7 +212,7 @@ function Import-DPContent {
                 $ObjectType = ([SMS_DPContentInfo]([SMS_PackageStatusDistPointsSummarizer_PackageType]$ObjPackage.PackageType).ToString()).value__
     
                 if ($ObjectType -eq [SMS_DPContentInfo]"Application") {
-                    $ObjectID = ConvertTo-PackageIDCIID -PackageID $ObjPackage.PackageID
+                    $ObjectID = ConvertTo-PackageIDCIID -PackageID $ObjPackage.PackageID -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 else {
                     $ObjectID = $ObjPackage.PackageID

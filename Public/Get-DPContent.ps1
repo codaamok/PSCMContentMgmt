@@ -78,8 +78,17 @@ function Get-DPContent {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
+        switch ($null) {
+            $SiteCode {
+                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+            $SiteServer {
+                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+        }
+        
         try {
-            Resolve-DP -Name $DistributionPoint
+            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -110,7 +119,7 @@ function Get-DPContent {
                 Description       = $_.Description
                 ObjectType        = [SMS_DPContentInfo]$_.ObjectType
                 ObjectID          = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
-                    ConvertTo-ModelNameCIID -ModelName $_.ObjectID
+                    ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 else {
                     $_.ObjectID

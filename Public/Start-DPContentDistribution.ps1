@@ -96,13 +96,22 @@ function Start-DPContentDistribution {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
+        switch ($null) {
+            $SiteCode {
+                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+            $SiteServer {
+                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+        }
+
         try {
             switch -Regex ($PSCmdlet.ParameterSetName) {
                 "DPG$" {
-                    Resolve-DPGroup -Name $DistributionPointGroup
+                    Resolve-DPGroup -Name $DistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 "DP$" {
-                    Resolve-DP -Name $DistributionPoint
+                    Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
                 }
             }
         }
@@ -125,8 +134,8 @@ function Start-DPContentDistribution {
 
         $OriginalLocation = (Get-Location).Path
 
-        if ($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
-            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
+        if ($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
+            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
         }
 
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"

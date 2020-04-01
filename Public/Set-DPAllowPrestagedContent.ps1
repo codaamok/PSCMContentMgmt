@@ -8,8 +8,6 @@ function Set-DPAllowPrestagedContent {
         A boolean value, $true configures the distribution point to allow prestage contet whereas $false removes the config.
 
         This is the equivilant of checking the box in the distribution point's properties for "Enables this distribution point for prestaged content". Checked = $true, unchecked = $false.
-    .PARAMETER Confirm
-        Suppress the prompt to continue.
     .PARAMETER SiteServer
         Query SMS_DPContentInfo on this server.
         
@@ -27,16 +25,13 @@ function Set-DPAllowPrestagedContent {
 
         Enables both distribution points to allow prestaged content and suppresses the confirmation prompt.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact="High")]
     param (
         [Parameter(Mandatory)]
         [String]$DistributionPoint,
 
         [Parameter()]
         [Bool]$State = $true,
-
-        [Parameter()]
-        [Bool]$Confirm = $true,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -47,28 +42,31 @@ function Set-DPAllowPrestagedContent {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
-        try {
-            Resolve-DP -Name $DistributionPoint
-        }
-        catch {
-            Write-Error -ErrorRecord $_
-            return
+        switch ($null) {
+            $SiteCode {
+                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+            $SiteServer {
+                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
         }
 
-        if ($Confirm -eq $true) {
-            $Title = "Changing allow prestage setting for '{0}'" -f $DistributionPoint
-            $Question = "`nDo you want to change the allow prestage content to '{0}' for distribution point '{1}'?" -f $State, $DistributionPoint
-            $Choices = "&Yes", "&No"
-            $Decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
-            if ($Decision -eq 1) {
-                return
-            }
+        try {
+            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+        }
+        catch {
+            $PSCmdlet.ThrowTerminatingError($_)
+        }
+
+        $Action = switch ($State) {
+            $true { "enable" }
+            $false { "disable" }
         }
 
         $OriginalLocation = (Get-Location).Path
 
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
-            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
+        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
+            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
         }
 
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
@@ -76,7 +74,12 @@ function Set-DPAllowPrestagedContent {
     process {
         $result = [ordered]@{ DistributionPoint = $DistributionPoint }
         try {
-            Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State
+            if ($PSCmdlet.ShouldProcess(
+                ("Would {0} allowing prestage content on '{1}'" -f $Action, $DistributionPoint),
+                "Question: Are you sure you want to continue?",
+                ("Warning: Changing allow prestage setting to {0}d for '{1}'" -f $Action, $DistributionPoint))) {
+                    Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State
+            }
             $result["Result"] = "Success"
         }
         catch {

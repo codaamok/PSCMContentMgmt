@@ -11,7 +11,7 @@ function Invoke-NativeCommand {
         this as a terminating error.
     
     .EXAMPLE
-        Invoke-NativeCommand git clone repo-uri -ErrorAction Stop
+        Invoke-NativeCommand git clone repo-uri -ErrorAction "Stop"
         
         Run the git command to clone repo-uri. Raise a terminating error if the command fails.
     #>
@@ -32,7 +32,7 @@ function Invoke-NativeCommand {
         try {
             $process = [System.Diagnostics.Process]@{
                 StartInfo = [System.Diagnostics.ProcessStartInfo]@{
-                    FileName               = (Get-Command $command -ErrorAction Stop).Source
+                    FileName               = (Get-Command $command -ErrorAction "Stop").Source
                     Arguments              = $argumentList
                     WorkingDirectory       = $pwd
                     RedirectStandardOutput = $true

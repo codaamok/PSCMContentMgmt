@@ -55,8 +55,17 @@ function Invoke-DPContentLibraryCleanup {
             }
         }
 
+        switch ($null) {
+            $SiteCode {
+                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+            $SiteServer {
+                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+        }
+
         try {
-            Resolve-DP -Name $DistributionPoint
+            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -64,8 +73,8 @@ function Invoke-DPContentLibraryCleanup {
 
         $OriginalLocation = (Get-Location).Path
 
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
-            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
+        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
+            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
         }
 
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"

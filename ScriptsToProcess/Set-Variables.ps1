@@ -1,7 +1,7 @@
 try {
-    $CMSiteServer = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection" -ErrorAction Stop | Select-Object -ExpandProperty Server
+    $CMSiteServer = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection" -ErrorAction "Stop" | Select-Object -ExpandProperty Server
     try {
-        $CMSiteCode = Get-CimInstance -ClassName "SMS_ProviderLocation" -Name "ROOT\SMS" -ComputerName $CMSiteServer -ErrorAction Stop | Select-Object -ExpandProperty SiteCode
+        $CMSiteCode = Get-CimInstance -ClassName "SMS_ProviderLocation" -Name "ROOT\SMS" -ComputerName $CMSiteServer -ErrorAction "Stop" | Select-Object -ExpandProperty SiteCode
     }
     catch {
         $CMSiteCode = $null

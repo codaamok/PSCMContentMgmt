@@ -9,13 +9,13 @@ function ConvertTo-ModelNameCIID {
         [ValidateNotNullOrEmpty()]
         [String]$ModelName,
 
-        [Parameter()]
+        [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
-        [Parameter()]
+        [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
+        [String]$SiteCode
     )
     begin {
         $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode

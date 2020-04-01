@@ -59,6 +59,15 @@ function Remove-DPContent {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
+        switch ($null) {
+            $SiteCode {
+                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+            $SiteServer {
+                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
+            }
+        }
+
         if ($PSCmdlet.ParameterSetName -ne "InputObject") {
             $InputObject = [PSCustomObject]@{
                 ObjectID          = $ObjectID
@@ -69,8 +78,8 @@ function Remove-DPContent {
 
         $OriginalLocation = (Get-Location).Path
 
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue)) {
-            New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $SiteServer -ErrorAction Stop | Out-Null
+        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
+            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
         }
 
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
@@ -78,7 +87,7 @@ function Remove-DPContent {
     process {
         if ($LastDP -ne $InputObject.DistributionPoint) {
             try {     
-                Resolve-DP -Name $InputObject.DistributionPoint
+                Resolve-DP -Name $InputObject.DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
             }
             catch {
                 Write-Error -ErrorRecord $_
