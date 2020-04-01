@@ -5,3 +5,5 @@ TODO: add parameter aliases
 TODO: add validatenotnullorempty() parameter attribute to parameters needing it
 TODO: add dp group support in Start-DPContentDistribution and any others that may benefit from it
 TODO: support all parameters for ContentLibraryCleanup.exe
+TODO: Properly use -confirm with ShouldProcess attribute
+TODO: workflow of $SiteServer and $SiteCode default values for each function can't happen. [validatenotnullorempty()] doesn't apply to default values :-(
