@@ -4,10 +4,12 @@ try {
         $CMSiteCode = Get-CimInstance -ClassName "SMS_ProviderLocation" -Name "ROOT\SMS" -ComputerName $CMSiteServer -ErrorAction "Stop" | Select-Object -ExpandProperty SiteCode
     }
     catch {
+        Write-Warning ('Could not auto-populate variable $CMSiteCode, either set this yourself or pass -SiteCode to all functions for this module ({0})' -f $_.Exception.Message)
         $CMSiteCode = $null
     }
 }
 catch {
+    Write-Warning ('Could not auto-populate variable $CMSiteServer, either set this yourself or pass -SiteServer to all functions for this module ({0})' -f $_.Exception.Message)
     $CMSiteServer = $null
 }
 
