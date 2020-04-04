@@ -8,3 +8,4 @@ TODO: support all parameters for ContentLibraryCleanup.exe
 TODO: Properly use -confirm with ShouldProcess attribute
 TODO: workflow of $SiteServer and $SiteCode default values for each function can't happen. [validatenotnullorempty()] doesn't apply to default values :-(
 TODO: It's dumb to validatenotnullorempty as well as null check in begin block on all functions, but you do it 'cuz of $CMSiteCode and $CMSiteServer
+TODO: do not need [ordered] ht if view data is crafted via format xml

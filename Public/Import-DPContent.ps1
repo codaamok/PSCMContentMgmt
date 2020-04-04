@@ -31,8 +31,6 @@ function Import-DPContent {
         The function attempts to discover the location of this exe on disk, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
     .PARAMETER ImportAllFromFolder
         Import all .pkgx files found -Folder regardless as to whether the object is currently in pending state or not.
-    .PARAMETER Confirm
-        Suppress the prompt to continue.
     .PARAMETER SiteServer
         Query SMS_DPContentInfo on this server.
         
@@ -54,7 +52,7 @@ function Import-DPContent {
 
         Imports all .pkgx files found in \\server\share\prestaged.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact="High")]
     param (
         [Parameter(Mandatory)]
         [ValidateScript({
@@ -80,9 +78,6 @@ function Import-DPContent {
 
         [Parameter()]
         [Switch]$ImportAllFromFolder,
-        
-        [Parameter()]
-        [Bool]$Confirm = $true,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -122,25 +117,13 @@ function Import-DPContent {
             $PSCmdlet.ThrowTerminatingError($_)
         }
 
-        if ($Confirm -eq $true) {
-            $Title = "Importing content to '{0}'" -f $DistributionPoint
-            $Question = @(
-                "`nDo you want to import all .pkgx files in '{0}' to distribution point '{1}'?" -f $Folder, $DistributionPoint
-                "`nNOTE: Run this command local to the distribution point you want to import content to"
-            )
-            $Choices = "&Yes", "&No"
-            $Decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
-            if ($Decision -eq 1) {
-                return
-            }
-        }
-
         # Get-PSDrive instead of Get-Volume because of UAC
         :loop foreach ($Volume in (Get-PSDrive -PSProvider "FileSystem")) {
             $Paths = @(
                 "{0}SMS_DP$\sms\Tools\ExtractContent.exe" -f $Volume.Root
                 "{0}SMS_DP$\ExtractContent.exe" -f $Volume.Root
             )
+
             foreach ($Path in $Paths) {
                 try {
                     if (Test-Path $Path -ErrorAction "Stop") {
@@ -187,22 +170,34 @@ function Import-DPContent {
         if ($ImportAllFromFolder.IsPresent -eq $true) {
             foreach ($File in $Files) {
                 if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
-                    $result = [ordered]@{ 
+
+                    $result = @{ 
+                        PSTypeName = "PSCMContentMgmtImport"
                         ObjectID   = $Matches.ObjectID
                         ObjectType = [SMS_DPContentInfo]$Matches.ObjectType
+                        Message    = $null
                     }
+
                     try {
-                        [void](Invoke-NativeCommand $ExtractContentExe /p:$($File.FullName) /F -ErrorAction "Stop")
-                        $result["Result"] = "Success"
+                        $result["Result"] = "No change"
+                        if ($PSCmdlet.ShouldProcess(
+                            ("Would import {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$Matches.ObjectType, $Matches.ObjectID, $File.Name, $env:ComputerName),
+                            "Are you sure you want to continue?",
+                            ("Warning: Importing {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$Matches.ObjectType, $Matches.ObjectID, $File.Name, $env:ComputerName))) {
+                                [void](Invoke-NativeCommand $ExtractContentExe /p:$($File.FullName) /F -ErrorAction "Stop")
+                                $result["Result"] = "Success"
+                        }   
                     }
                     catch {
                         Write-Error -ErrorRecord $_
-                        $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+                        $result["Result"] = "Failed"
+                        $result["Message"] = $_.Exception.Message
                     }
+                    
                     [PSCustomObject]$result
                 }
                 else {
-                    Write-Warning ("File '{0}' is not identifiable, skipping")
+                    Write-Warning ("File '{0}' is not identifiable, skipping" -f $File.Name)
                 }
             }
         }
@@ -222,23 +217,33 @@ function Import-DPContent {
                 $Path = Join-Path -Path $Folder -ChildPath $FileName
     
                 if (Test-Path $Path) {
-                    Write-Verbose ("Importing '{0}'" -f $Path)
-                    $result = [ordered]@{ 
+                    $result = @{ 
+                        PSTypeName = "PSCMContentMgmtImport"
                         ObjectID   = $ObjectID
                         ObjectType = [SMS_DPContentInfo]$ObjectType
+                        Message    = $null
                     }
+
                     try {
-                        [void](Invoke-NativeCommand $ExtractContentExe /p:$Path /F -ErrorAction "Stop")
-                        $result["Result"] = "Success"
+                        $result["Result"] = "No change"
+                        if ($PSCmdlet.ShouldProcess(
+                            ("Would import {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$ObjectType, $ObjectID, $FileName, $env:ComputerName),
+                            "Are you sure you want to continue?",
+                            ("Warning: Importing {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$ObjectType, $ObjectID, $FileName, $env:ComputerName))) {
+                                [void](Invoke-NativeCommand $ExtractContentExe /p:$Path /F -ErrorAction "Stop")
+                                $result["Result"] = "Success"
+                        }
                     }
                     catch {
                         Write-Error -ErrorRecord $_
-                        $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+                        $result["Result"] = "Failed"
+                        $result["Message"] = $_.Exception.Message
                     }
+
                     [PSCustomObject]$result
                 }
                 else {
-                    Write-Warning ("Could not find {0} ({1}) '{2}'" -f $ObjectID, [SMS_DPContentInfo]$ObjectType, $Path)
+                    Write-Warning ("Could not find '{0}' ({1}) '{2}'" -f $ObjectID, [SMS_DPContentInfo]$ObjectType, $Path)
                 }
             }
         }

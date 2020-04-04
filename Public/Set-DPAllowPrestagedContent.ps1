@@ -72,19 +72,25 @@ function Set-DPAllowPrestagedContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        $result = [ordered]@{ DistributionPoint = $DistributionPoint }
+        $result = @{
+            PSTypeName        = "PSCMContentMgmtPrestage"
+            DistributionPoint = $DistributionPoint
+            Message           = $null
+        }
         try {
+            $result["Result"] = "No change"
             if ($PSCmdlet.ShouldProcess(
                 ("Would {0} allowing prestage content on '{1}'" -f $Action, $DistributionPoint),
-                "Question: Are you sure you want to continue?",
+                "Are you sure you want to continue?",
                 ("Warning: Changing allow prestage setting to {0}d for '{1}'" -f $Action, $DistributionPoint))) {
                     Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State
+                    $result["Result"] = "Success"
             }
-            $result["Result"] = "Success"
         }
         catch {
             Write-Error -ErrorRecord $_
-            $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+            $result["Result"] = "Failed"
+            $result["Message"] = $_.Exception.Message
         }
         [PSCustomObject]$result
     }
