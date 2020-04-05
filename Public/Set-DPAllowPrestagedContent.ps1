@@ -25,7 +25,7 @@ function Set-DPAllowPrestagedContent {
 
         Enables both distribution points to allow prestaged content and suppresses the confirmation prompt.
     #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact="High")]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Medium")]
     param (
         [Parameter(Mandatory)]
         [String]$DistributionPoint,

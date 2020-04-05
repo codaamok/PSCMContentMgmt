@@ -52,7 +52,7 @@ function Import-DPContent {
 
         Imports all .pkgx files found in \\server\share\prestaged.
     #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact="High")]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (
         [Parameter(Mandatory)]
         [ValidateScript({

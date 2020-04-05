@@ -18,8 +18,6 @@ function Remove-DPContent {
         Can be one of the following values: "Package", "DriverPackage", "DeploymentPackage", "OperatingSystemImage", "OperatingSystemInstaller", "BootImage", "Application".
 
         When using this parameter you must also use ObjectID.
-    .PARAMETER Confirm
-        Suppress the prompt to continue.
     .EXAMPLE 
         PS C:\> Get-DPContent -Package -DistributionPoint "dp1.contoso.com" | Remove-DPContent
 
@@ -29,7 +27,7 @@ function Remove-DPContent {
 
         Removes objects with content distribution status of "failed" distributed to dp1.contoso.com.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObject")]
         [PSTypeName('PSCMContentMgmt')]
@@ -46,9 +44,6 @@ function Remove-DPContent {
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
         [ValidateSet("Package","DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
         [SMS_DPContentInfo]$ObjectType,
-
-        [Parameter()]
-        [Bool]$Confirm = $true,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -98,30 +93,31 @@ function Remove-DPContent {
             $LastDP = $InputObject.DistributionPoint
         }
 
-        if ($Confirm -eq $true) {
-            $Title = "Removing '{0}' ({1}) from '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint
-            $Question = "`nDo you want to remove '{0}' ({1}) from distribution point '{2}'?" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint
-            $Choices = "&Yes", "&No"
-            $Decision = $Host.UI.PromptForChoice($title, $question, $choices, 0)
-            if ($Decision -eq 1) {
-                return
-            }
-        }
-
-        $result = [ordered]@{ 
+        $result = @{ 
+            PSTypeName = "PSCMContentMgmtRemove"
             ObjectID   = $InputObject.ObjectID
             ObjectType = $InputObject.ObjectType
+            Message    = $null
         }
         
         $Command = 'Remove-CMContentDistribution -DistributionPointName "{0}" -{1} "{2}" -Force -ErrorAction "Stop"' -f $InputObject.DistributionPoint, [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID
         $ScriptBlock = [ScriptBlock]::Create($Command)
         try {
-            Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-            $result["Result"] = "Success"
+            if ($PSCmdlet.ShouldProcess(
+                ("Would remove '{0}' ({1}) from '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint),
+                "Are you sure you want to continue?",
+                ("Removing '{0}' ({1}) from '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.DistributionPoint))) {
+                    Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                    $result["Result"] = "Success"
+            }
+            else {
+                $result["Result"] = "No change"
+            }
         }
         catch {
             Write-Error -ErrorRecord $_
-            $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+            $result["Result"] = "Failed"
+            $result["Message"] = $_.Exception.Message
         }
         [PSCustomObject]$result
     }

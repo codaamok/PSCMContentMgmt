@@ -122,7 +122,7 @@ function Export-DPContent {
         $File = "{0}_{1}.pkgx" -f [int]$InputObject.ObjectType, $InputObject.ObjectID
         $Path = Join-Path -Path $Folder -ChildPath $File
 
-        $result = [ordered]@{ 
+        $result = @{ 
             PSTypeName = "PSCMContentMgmtPrestage"
             ObjectID   = $InputObject.ObjectID
             ObjectType = $InputObject.ObjectType

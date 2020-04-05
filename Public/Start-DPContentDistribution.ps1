@@ -47,7 +47,7 @@ function Start-DPContentDistribution {
 
         For all .pkgx files in this folder that use the following naming convention "<ObjectType>_<ObjectID>.pkgx", distribute the <ObjectID> of type <ObjectType> to dp2.contoso.com.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Medium")]
     param (
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObjectDP")]
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObjectDPG")]
@@ -146,25 +146,36 @@ function Start-DPContentDistribution {
                 foreach ($File in $FIles) {
                     if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
                         $InputObject = [PSCustomObject]@{
-                            ObjectID          = $Matches.ObjectID
-                            ObjectType        = $Matches.ObjectType
+                            ObjectID   = $Matches.ObjectID
+                            ObjectType = $Matches.ObjectType
                         }
     
-                        $result = [ordered]@{ 
+                        $result = @{
+                            PSTypeName = "PSCMContentMgrDistribute" 
                             ObjectID   = $InputObject.ObjectID
                             ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
+                            Message    = $null
                         }
 
                         #TODO: add DP group support here
                         $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
                         $ScriptBlock = [ScriptBlock]::Create($Command)
                         try {
-                            Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-                            $result["Result"] = "Success"
+                            if ($PSCmdlet.ShouldProcess(
+                                ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint),
+                                "Are you sure you want to continue?",
+                                ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint))) {
+                                    Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                                    $result["Result"] = "Success"
+                            }
+                            else {
+                                $result["Result"] = "No change"
+                            }
                         }
                         catch {
                             Write-Error -ErrorRecord $_
-                            $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+                            $result["Result"] = "Failed"
+                            $result["Message"] = $_.Exception.Message
                         }
                         [PSCustomObject]$result
                     }
@@ -174,20 +185,31 @@ function Start-DPContentDistribution {
                 }
             }
             default {
-                $result = [ordered]@{ 
+                $result = @{
+                    PSTypeName = "PSCMContentMgrDistribute" 
                     ObjectID   = $InputObject.ObjectID
                     ObjectType = $InputObject.ObjectType
+                    Message    = $null
                 }
                 #TODO: add DP group support here
                 $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {
-                    Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-                    $result["Result"] = "Success"
+                    if ($PSCmdlet.ShouldProcess(
+                        ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint),
+                        "Are you sure you want to continue?",
+                        ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint))) {
+                            Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                            $result["Result"] = "Success"
+                    }
+                    else {
+                        $result["Result"] = "No change"
+                    }
                 }
                 catch {
                     Write-Error -ErrorRecord $_
-                    $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+                    $result["Result"] = "Failed"
+                    $result["Message"] = $_.Exception.Message
                 }
                 [PSCustomObject]$result
             }

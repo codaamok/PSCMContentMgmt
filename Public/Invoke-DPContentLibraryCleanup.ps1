@@ -1,7 +1,7 @@
 function Invoke-DPContentLibraryCleanup {
     <#
     .SYNOPSIS
-        Short description
+        #TODO: Work this when Aaron confirm behaviour for primary & secondary sites
     .DESCRIPTION
         Long description
     .EXAMPLE
@@ -52,15 +52,6 @@ function Invoke-DPContentLibraryCleanup {
                     $null
                 )
                 $PSCmdlet.ThrowTerminatingError($ErrorRecord)
-            }
-        }
-
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
         }
 
@@ -115,40 +106,6 @@ function Invoke-DPContentLibraryCleanup {
             $PSCmdlet.ThrowTerminatingError($ErrorRecord)
         }
 
-        $User = "{0}\{1}" -f $env:USERDOMAIN, $env:USERNAME
-        try {
-            $CMUserObj = Get-CMAdministrativeUser -Name $User -ErrorAction "Stop"
-        }
-        catch {
-            $PSCmdlet.ThrowTerminatingError($_)
-        }
-
-        if (-not $CMUserObj -Or $CMUserObj.RoleNames -notcontains "Full Administrator") {
-            $Message = "You user account is not a ConfigMgr Full Administrative in site '{0}'" -f $SiteCode
-            $Exception = [Exception]::new($Message)
-            $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
-                $Exception,
-                "2",
-                [System.Management.Automation.ErrorCategory]::PermissionDenied,
-                $null
-            )
-            $PSCmdlet.ThrowTerminatingError($ErrorRecord)
-        }
-
-        $CMUserScopes = $CMUserObj.Permissions | Where-Object { $_.CategoryTypeID -eq 29 }
-
-        if (-not $CMUserScopes.CategoryName -contains "All") {
-            $Message = "You ConfigMgr user does not have the Security Scope 'All' delegated to it" -f $SiteCode
-            $Exception = [Exception]::new($Message)
-            $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
-                $Exception,
-                "2",
-                [System.Management.Automation.ErrorCategory]::PermissionDenied,
-                $null
-            )
-            $PSCmdlet.ThrowTerminatingError($ErrorRecord)
-        }
-
         Set-Location $OriginalLocation
     }
     process {
@@ -157,13 +114,11 @@ function Invoke-DPContentLibraryCleanup {
                 ("Would perform content library cleanup on '{0}'" -f $DistributionPoint),
                 "Are you sure you want to continue?",
                 ("Warning: calling ContentLibraryCleanup.exe against '{0}'" -f $DistributionPoint))) {
-                    $pArgs = @("/dp", $DistributionPoint, "/q", "/delete")
-                    & $Path $pArgs
+                    Invoke-NativeCommand $Path "/dp" $DistributionPoint "/q" "/delete"
             }
         }
         else {
-            $pArgs = @("/dp", $DistributionPoint, "/q")
-            & $Path $pArgs
+            Invoke-NativeCommand $Path "/dp" $DistributionPoint "/q"
         }
     }
     end {
