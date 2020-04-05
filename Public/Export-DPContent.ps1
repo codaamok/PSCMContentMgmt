@@ -20,8 +20,6 @@ function Export-DPContent {
         When using this parameter you must also use ObjectID.
     .PARAMETER Folder
         The target directory to store the generated .pkgx files in.
-    .Parameter Force
-        Specify this switch to overwrite .pkgx files if they already exist in the target directory from -Folder.
     .PARAMETER SiteServer
         Query SMS_DPContentInfo on this server.
 
@@ -74,9 +72,6 @@ function Export-DPContent {
         [String]$Folder,
 
         [Parameter()]
-        [Switch]$Force,
-
-        [Parameter()]
         [ValidateNotNullOrEmpty()]
         [String]$SiteServer = $CMSiteServer,
         
@@ -127,19 +122,11 @@ function Export-DPContent {
         $File = "{0}_{1}.pkgx" -f [int]$InputObject.ObjectType, $InputObject.ObjectID
         $Path = Join-Path -Path $Folder -ChildPath $File
 
-        if (Test-Path $Path) {
-            if ($Force.IsPresent) {
-                Remove-Item -Path $Path -Force
-            }
-            else {
-                Write-Warning ("File '{0}' already exists, use -Force to overwrite" -f $Path)
-                return
-            }
-        }
-        
         $result = [ordered]@{ 
+            PSTypeName = "PSCMContentMgmtPrestage"
             ObjectID   = $InputObject.ObjectID
             ObjectType = $InputObject.ObjectType
+            Message    = $null
         }
 
         $Command = 'Publish-CMPrestageContent -{0} "{1}" -DistributionPointName "{2}" -FileName "{3}"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $InputObject.DistributionPoint, $Path
@@ -150,7 +137,8 @@ function Export-DPContent {
         }
         catch {
             Write-Error -ErrorRecord $_
-            $result["Result"] = "Failed: {0}" -f $_.Exception.Message
+            $result["Result"] = "Failed"
+            $result["Message"] = $_.Exception.Message
         }
         [PSCustomObject]$result
     }

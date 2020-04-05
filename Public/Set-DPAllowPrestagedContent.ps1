@@ -73,7 +73,7 @@ function Set-DPAllowPrestagedContent {
     }
     process {
         $result = @{
-            PSTypeName        = "PSCMContentMgmtPrestage"
+            PSTypeName        = "PSCMContentMgmtPrestageSetting"
             DistributionPoint = $DistributionPoint
             Message           = $null
         }

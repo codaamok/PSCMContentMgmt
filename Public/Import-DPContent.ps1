@@ -184,7 +184,7 @@ function Import-DPContent {
                             ("Would import {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$Matches.ObjectType, $Matches.ObjectID, $File.Name, $env:ComputerName),
                             "Are you sure you want to continue?",
                             ("Warning: Importing {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$Matches.ObjectType, $Matches.ObjectID, $File.Name, $env:ComputerName))) {
-                                [void](Invoke-NativeCommand $ExtractContentExe /p:$($File.FullName) /F -ErrorAction "Stop")
+                                $null = Invoke-NativeCommand $ExtractContentExe /p:$($File.FullName) /F -ErrorAction "Stop"
                                 $result["Result"] = "Success"
                         }   
                     }
@@ -230,7 +230,7 @@ function Import-DPContent {
                             ("Would import {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$ObjectType, $ObjectID, $FileName, $env:ComputerName),
                             "Are you sure you want to continue?",
                             ("Warning: Importing {0} {1} ({2}) to '{3}'" -f [SMS_DPContentInfo]$ObjectType, $ObjectID, $FileName, $env:ComputerName))) {
-                                [void](Invoke-NativeCommand $ExtractContentExe /p:$Path /F -ErrorAction "Stop")
+                                $null = Invoke-NativeCommand $ExtractContentExe /p:$Path /F -ErrorAction "Stop"
                                 $result["Result"] = "Success"
                         }
                     }
