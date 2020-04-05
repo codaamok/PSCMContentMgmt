@@ -78,13 +78,15 @@ function Set-DPAllowPrestagedContent {
             Message           = $null
         }
         try {
-            $result["Result"] = "No change"
             if ($PSCmdlet.ShouldProcess(
                 ("Would {0} allowing prestage content on '{1}'" -f $Action, $DistributionPoint),
                 "Are you sure you want to continue?",
                 ("Warning: Changing allow prestage setting to {0}d for '{1}'" -f $Action, $DistributionPoint))) {
                     Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State
                     $result["Result"] = "Success"
+            }
+            else {
+                $result["Result"] = "No change"
             }
         }
         catch {

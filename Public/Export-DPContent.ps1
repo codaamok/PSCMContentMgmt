@@ -33,7 +33,7 @@ function Export-DPContent {
 
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Get-DPContent -DistributionPoint "dp1.contoos.com" | Export-DPContent -Folder "E:\prestaged" -Force
+        PS C:\> Get-DPContent -DistributionPoint "dp1.contoos.com" | Export-DPContent -Folder "E:\prestaged"
 
         Gathers all content objects on dp1.contoso.com and exports them to .pkgx files in E:\prestaged, overwriting any files that already exist with the same name.
     .EXAMPLE

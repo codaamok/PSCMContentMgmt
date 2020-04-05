@@ -14,7 +14,7 @@ function Invoke-DPContentLibraryCleanup {
     .NOTES
         General notes
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -31,7 +31,7 @@ function Invoke-DPContentLibraryCleanup {
         [String]$ContentLibraryCleanupExe,
 
         [Parameter()]
-        [Bool]$Confirm = $true,
+        [Switch]$Delete,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -152,11 +152,19 @@ function Invoke-DPContentLibraryCleanup {
         Set-Location $OriginalLocation
     }
     process {
-        $pArgs = @("/dp", $DistributionPoint)
-        if ($Confirm -eq $false) {
-            $pArgs += "/q"
+        if ($Delete.IsPresent) {
+            if ($PSCmdlet.ShouldProcess(
+                ("Would perform content library cleanup on '{0}'" -f $DistributionPoint),
+                "Are you sure you want to continue?",
+                ("Warning: calling ContentLibraryCleanup.exe against '{0}'" -f $DistributionPoint))) {
+                    $pArgs = @("/dp", $DistributionPoint, "/q", "/delete")
+                    & $Path $pArgs
+            }
         }
-        & $Path $pArgs
+        else {
+            $pArgs = @("/dp", $DistributionPoint, "/q")
+            & $Path $pArgs
+        }
     }
     end {
     }
