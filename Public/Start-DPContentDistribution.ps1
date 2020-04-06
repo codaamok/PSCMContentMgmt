@@ -108,9 +108,17 @@ function Start-DPContentDistribution {
         try {
             switch -Regex ($PSCmdlet.ParameterSetName) {
                 "DPG$" {
+                    $Target = [PSCustomObject]@{
+                        Parameter = "DistributionPointGroupName"
+                        Name      = $DistributionPointGroup
+                    }
                     Resolve-DPGroup -Name $DistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 "DP$" {
+                    $Target = [PSCustomObject]@{
+                        Parameter = "DistributionPointName"
+                        Name      = $DistributionPoint
+                    }
                     Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
                 }
             }
@@ -157,14 +165,13 @@ function Start-DPContentDistribution {
                             Message    = $null
                         }
 
-                        #TODO: add DP group support here
-                        $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
+                        $Command = 'Start-CMContentDistribution -{0} "{1}" -{2} "{3}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $Target.Parameter, $Target.Name
                         $ScriptBlock = [ScriptBlock]::Create($Command)
                         try {
                             if ($PSCmdlet.ShouldProcess(
-                                ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint),
+                                ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $Target.Name),
                                 "Are you sure you want to continue?",
-                                ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint))) {
+                                ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $Target.Name))) {
                                     Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                                     $result["Result"] = "Success"
                             }
@@ -191,14 +198,14 @@ function Start-DPContentDistribution {
                     ObjectType = $InputObject.ObjectType
                     Message    = $null
                 }
-                #TODO: add DP group support here
-                $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $DistributionPoint
+
+                $Command = 'Start-CMContentDistribution -{0} "{1}" -{2} "{3}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $Target.Parameter, $Target.Name
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {
                     if ($PSCmdlet.ShouldProcess(
-                        ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint),
+                        ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $Target.Name),
                         "Are you sure you want to continue?",
-                        ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $DistributionPoint))) {
+                        ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $Target.Name))) {
                             Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                             $result["Result"] = "Success"
                     }
