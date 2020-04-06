@@ -151,7 +151,7 @@ function Start-DPContentDistribution {
                         }
     
                         $result = @{
-                            PSTypeName = "PSCMContentMgrDistribute" 
+                            PSTypeName = "PSCMContentMgmtDistribute" 
                             ObjectID   = $InputObject.ObjectID
                             ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
                             Message    = $null
@@ -186,7 +186,7 @@ function Start-DPContentDistribution {
             }
             default {
                 $result = @{
-                    PSTypeName = "PSCMContentMgrDistribute" 
+                    PSTypeName = "PSCMContentMgmtDistribute" 
                     ObjectID   = $InputObject.ObjectID
                     ObjectType = $InputObject.ObjectType
                     Message    = $null
