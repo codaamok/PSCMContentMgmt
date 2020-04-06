@@ -12,6 +12,8 @@ function Get-DPContent {
         Properties returned are: ObjectName, Description, ObjectType, ObjectID, SourceSize, DistributionPoint.
     .PARAMETER DistributionPoint
         Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+    .PARAMETER DistributionPointGroup
+        Name of distribution point group you want to query.
     .PARAMETER Package
         Filter on packages
     .PARAMETER DriverPackage
@@ -45,8 +47,11 @@ function Get-DPContent {
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)]
+        [Parameter(Mandatory, ParameterSetName="DP")]
         [String]$DistributionPoint,
+
+        [Parameter(Mandatory, ParameterSetName="DPG")]
+        [String]$DistributionPointGroup,
 
         [Parameter()]
         [Switch]$Package,
@@ -86,17 +91,43 @@ function Get-DPContent {
                 Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
         }
-        
+
+        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+
         try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+            switch ($PSCmdlet.ParameterSetName) {
+                "DPG" {
+                    Resolve-DPGroup -Name $DistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
+                    $Query = "SELECT GroupID FROM SMS_DPGroupInfo WHERE Name = '{0}'" -f $DistributionPointGroup
+                    try {
+                        $GroupID = Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | Select-Object -ExpandProperty GroupID
+                    }
+                    catch {
+                        # TODO: re-throw with this as inner exception
+                        throw
+                    }
+                    $Target = [PSCustomObject]@{
+                        ClassName     = "SMS_DPGroupContentInfo"
+                        PropertyName  = "GroupID"
+                        Propertyvalue = $GroupID
+                    }
+                }
+                "DP" {
+                    Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+                    $Target = [PSCustomObject]@{
+                        ClassName     = "SMS_DPContentInfo"
+                        PropertyName  = "NALPath"
+                        PropertyValue = $DistributionPoint
+                    }
+                }
+            }
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }
     process {
-        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT * FROM SMS_DPContentInfo WHERE NALPath like '%{0}%'" -f $DistributionPoint
+        $Query = "SELECT * FROM {0} WHERE {1} like '%{2}%'" -f $Target.ClassName, $Target.PropertyName, $Target.PropertyValue
     
         $conditions = switch ($true) {
             $Package                    { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Package" }
