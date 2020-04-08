@@ -2,7 +2,7 @@
 <Configuration>
     <ViewDefinitions>
         <View>
-            <Name>PSCMContentMgmtImport</Name>
+            <Name>PSCMContentMgmtCommon</Name>
             <ViewSelectedBy>
                 <TypeName>PSCMContentMgmtImport</TypeName>
                 <TypeName>PSCMContentMgmtPrestage</TypeName>
