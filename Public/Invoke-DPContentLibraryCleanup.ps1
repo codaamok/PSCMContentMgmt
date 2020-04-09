@@ -44,7 +44,7 @@ function Invoke-DPContentLibraryCleanup {
     begin {
         if ($DistributionPoint.StartsWith($env:ComputerName)) {
             if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator") -eq $false) {
-                $Exception = [Exception]::new("Must run as administrator")
+                $Exception = [UnauthorizedAccessException]::new("Must run as administrator")
                 $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
                     $Exception,
                     "2",
@@ -96,7 +96,7 @@ function Invoke-DPContentLibraryCleanup {
         }
 
         if (-not $ContentLibraryCleanupExe) {
-            $Exception = [Exception]::new("Could not find ContentLibraryCleanup.exe, please use -ContentLibraryCleanupExe parameter")
+            $Exception = [System.IO.FileNotFoundException]::new("Could not find ContentLibraryCleanup.exe, please use -ContentLibraryCleanupExe parameter")
             $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
                 $Exception,
                 "2",

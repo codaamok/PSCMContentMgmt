@@ -103,8 +103,7 @@ function Get-DPContent {
                         $GroupID = Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | Select-Object -ExpandProperty GroupID
                     }
                     catch {
-                        # TODO: re-throw with this as inner exception
-                        throw
+                        Write-Error -Message "Unable to query server to get distribution point group GroupID" -Exception $_.Exception -Category "InvalidOperation" -ErrorAction "Stop"
                     }
                     $Target = [PSCustomObject]@{
                         ClassName     = "SMS_DPGroupContentInfo"

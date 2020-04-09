@@ -89,7 +89,7 @@ function Import-DPContent {
     )
     begin {
         if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator") -eq $false) {
-            $Exception = [Exception]::new("Must run as administrator")
+            $Exception = [UnauthorizedAccessException]::new("Must run as administrator")
             $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
                 $Exception,
                 "2",
@@ -141,7 +141,7 @@ function Import-DPContent {
         }
 
         if (-not $ExtractContentExe) {
-            $Exception = [Exception]::new("Could not find ExtractContent.exe on disk, please use -ExtractContentExe parameter")
+            $Exception = [System.IO.FileNotFoundException]::new("Could not find ExtractContent.exe on disk, please use -ExtractContentExe parameter")
             $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
                 $Exception,
                 "2",
