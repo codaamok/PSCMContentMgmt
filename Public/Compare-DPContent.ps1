@@ -1,11 +1,15 @@
 function Compare-DPContent {
     <#
     .SYNOPSIS
-        Returns a list of content objects missing from the given target server comapred to the source server.
-    .PARAMETER Source
+        Returns a list of content objects missing from the given target distribution point or distribution point group, comapred to the source distribution point or distribution point group.
+    .PARAMETER SourceDistributionPoint
         Name of the referencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
-    .PARAMETER Target
+    .PARAMETER TargetDistributionPoint
         Name of the differencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+    .PARAMETER SourceDistributionPointGroup
+        Name of the referencing distribution point group you want to query.
+    .PARAMETER TargetDistributionPointGroup
+        Name of the differencing distribution point group you want to query.
     .PARAMETER SiteServer
         Query SMS_DPContentInfo on this server.
 
@@ -22,14 +26,28 @@ function Compare-DPContent {
         PS C:\> Compare-DPContent -Source dp1.contoso.com -Target dp2.contoso.com
 
         Return content objects which are missing from dp2.contoso.com compared to dp1.contoso.com.
+    .EXAMPLE
+        PS C:\> Compare-DPContent -SourceDistributionPoint dp1.contos.com -TargetDistributionPointGroup "Asia DPs"
+
+        Returns content objects which are missing from the "Asia DPs" distribution point group compared to dp1.contoso.com.
     #>
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)]
-        [String]$Source,
+        [Parameter(Mandatory, ParameterSetName="SourceDPTargetDP")]
+        [Parameter(Mandatory, ParameterSetName="SourceDPTargetDPG")]
+        [String]$SourceDistributionPoint,
 
-        [Parameter(Mandatory)]
-        [String]$Target,
+        [Parameter(Mandatory, ParameterSetName="SourceDPGTargetDP")]
+        [Parameter(Mandatory, ParameterSetName="SourceDPTargetDP")]
+        [String]$TargetDistributionPoint,
+
+        [Parameter(Mandatory, ParameterSetName="SourceDPGTargetDP")]
+        [Parameter(Mandatory, ParameterSetName="SourceDPGTargetDPG")]
+        [String]$SourceDistributionPointGroup,
+
+        [Parameter(Mandatory, ParameterSetName="SourceDPTargetDPG")]
+        [Parameter(Mandatory, ParameterSetName="SourceDPGTargetDPG")]
+        [String]$TargetDistributionPointGroup,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -48,26 +66,31 @@ function Compare-DPContent {
                 Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
         }
-
+    }
+    process {
         try {
-            Resolve-DP -Name $Source -SiteServer $SiteServer -SiteCode $SiteCode
-            Resolve-DP -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
+            switch ($PSBoundParameters.Keys) {
+                "SourceDistributionPoint" {
+                    Resolve-DP -Name $SourceDistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+                    $SourceContent = Get-DPContent -DistributionPoint $SourceDistributionPoint
+                }
+                "SourceDistributionPointGroup" {
+                    Resolve-DPGroup -Name $SourceDistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
+                    $SourceContent = Get-DPContent -DistributionPointGroup $SourceDistributionPointGroup
+                }
+                "TargetDistributionPoint" {
+                    Resolve-DP -Name $TargetDistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+                    $TargetContent = Get-DPContent -DistributionPoint $TargetDistributionPoint
+                }
+                "TargetDistributionPointGroup" {
+                    Resolve-DPGroup -Name $TargetDistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
+                    $TargetContent = Get-DPContent -DistributionPointGroup $TargetDistributionPointGroup
+                }
+            }
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
-        
-        $OriginalLocation = (Get-Location).Path
-
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
-    }
-    process {
-        $SourceContent = Get-DPContent -DistributionPoint $Source
-        $TargetContent = Get-DPContent -DistributionPoint $Target
     
         Compare-Object -ReferenceObject $SourceContent -DifferenceObject $TargetContent -Property ObjectID -PassThru | ForEach-Object {
             if ($_.SideIndicator -eq "<=") {
@@ -84,6 +107,5 @@ function Compare-DPContent {
         }
     }
     end {
-        Set-Location $OriginalLocation
     }    
 }
