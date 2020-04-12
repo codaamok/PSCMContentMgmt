@@ -19,9 +19,17 @@ function Remove-DPContent {
 
         When using this parameter you must also use ObjectID.
     .EXAMPLE 
-        PS C:\> 
+        PS C:\> Get-DPContent -DistributionPoint "dp.contoso.com" | Remove-DPContent
+
+        Removes all content from the distribution point "dp.contoso.com"
+    .EXAMPLE 
+        PS C:\> Get-DPContent -DistributionPoint "dp.contoso.com" | Remove-DPContent -DistributionPoint "anotherdp.contoso.com"
+
+        Removes all content found on distribution point "dp.contoso.com" from the distribution point "anotherdp.contoso.com"
     .EXAMPLE
-        PS C:\> 
+        PS C:\> Remove-DPContent -ObjectID "17014765" -ObjectType "Application" -DistributionPoint "dp.contoso.com"
+
+        Removes application with CI_ID value of "17014765" from distribution point "dp.contoso.com"
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (

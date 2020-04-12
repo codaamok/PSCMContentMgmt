@@ -19,9 +19,13 @@ function Remove-DPGroupContent {
 
         When using this parameter you must also use ObjectID.
     .EXAMPLE 
-        PS C:\> 
+        PS C:\> Get-DPGroupContent -DistributionPointGroup "Asia DPs" | Remove-DPGroupContent
+
+        Removes all content from the distribution point group "Asia DPs"
     .EXAMPLE
-        PS C:\> 
+        PS C:\> Remove-DPGroupContent -ObjectID "17014765" -ObjectType "Application" -DistributionPointGroup "Asia DPs"
+
+        Removes application with CI_ID value of "17014765" from distribution point group "Asia DPs"
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (
