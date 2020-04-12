@@ -1,17 +1,17 @@
-function Get-DPContent {
+function Get-DPGroupContent {
     <#
     .SYNOPSIS
-        Get all content distributed to a given distribution point by querying SMS_DPContentInfo class.
+        Get all content distributed to a given distribution point group by querying the SMS_DPGroupContentInfo.
     .DESCRIPTION
-        Get all content distributed to a given distribution point by querying SMS_DPContentInfo class.
+        Get all content distributed to a given distribution point group by querying the SMS_DPGroupContentInfo.
 
-        By default this function returns all content object types that match the given distribution point in the SMS_DPContentInfo class on the site server.
+        By default this function returns all content object types that match the given distribution point group in the SMS_DPGroupContentInfo class on the site server.
 
         You can filter the content objects by cumulatively using the available switches, e.g. using -Package -DriverPackage will return packages and driver packages.
 
         Properties returned are: ObjectName, Description, ObjectType, ObjectID, SourceSize, DistributionPoint.
     .PARAMETER Name
-        Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of distribution point group you want to query.
     .PARAMETER Package
         Filter on packages
     .PARAMETER DriverPackage
@@ -39,14 +39,14 @@ function Get-DPContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Get-DPContent -Name dp.contoso.com -Package -Application
+        PS C:\> Get-DPGroupContent -Name "Asia DPs" -Package -Application
 
-        Return all packages and applications found on dp.contoso.com.s
+        Return all packages and applications found in the distribution point group "Asia DPs"
     #>
     [CmdletBinding()]
-    param (
+    param(
         [Parameter(Mandatory)]
-        [String]$DistributionPoint,
+        [String]$DistributionPointGroup,
 
         [Parameter()]
         [Switch]$Package,
@@ -88,15 +88,21 @@ function Get-DPContent {
         }
         
         try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DPGroup -Name $DistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
-        }
+        }        
     }
     process {
         $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT * FROM SMS_DPContentInfo WHERE NALPath like '%{0}%'" -f $DistributionPoint
+        $Query = "SELECT * 
+        FROM SMS_DPGroupContentInfo 
+        WHERE SMS_DPGroupContentInfo.GroupID in (
+            SELECT SMS_DPGroupInfo.GroupID
+            FROM SMS_DPGroupInfo
+            WHERE Name = '{0}'
+        )" -f $DistributionPointGroup
     
         $conditions = switch ($true) {
             $Package                    { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Package" }
@@ -114,18 +120,18 @@ function Get-DPContent {
     
         Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
             [PSCustomObject]@{
-                PSTypeName        = "PSCMContentMgmt"
-                ObjectName        = $_.Name
-                Description       = $_.Description
-                ObjectType        = [SMS_DPContentInfo]$_.ObjectType
-                ObjectID          = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
+                PSTypeName             = "PSCMContentMgmt"
+                ObjectName             = $_.Name
+                Description            = $_.Description
+                ObjectType             = [SMS_DPContentInfo]$_.ObjectType
+                ObjectID               = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
                     ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 else {
                     $_.ObjectID
                 })
-                SourceSize        = $_.SourceSize
-                DistributionPoint = $DistributionPoint
+                SourceSize             = $_.SourceSize
+                DistributionPointGroup = $DistributionPointGroup
             }
         }
     }

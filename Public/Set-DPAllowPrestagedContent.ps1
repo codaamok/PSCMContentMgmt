@@ -94,7 +94,8 @@ function Set-DPAllowPrestagedContent {
             $result["Result"] = "Failed"
             $result["Message"] = $_.Exception.Message
         }
-        [PSCustomObject]$result
+        
+        if (-not $WhatIfPreference) { [PSCustomObject]$result }
     }
     end {
         Set-Location $OriginalLocation

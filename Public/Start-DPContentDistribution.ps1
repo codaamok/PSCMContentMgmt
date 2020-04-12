@@ -186,7 +186,8 @@ function Start-DPContentDistribution {
                             $result["Result"] = "Failed"
                             $result["Message"] = $_.Exception.Message
                         }
-                        [PSCustomObject]$result
+                        
+                        if (-not $WhatIfPreference) { [PSCustomObject]$result }
                     }
                     else {
                         Write-Warning ("Skipping '{0}'" -f $File.Name)
@@ -220,7 +221,8 @@ function Start-DPContentDistribution {
                     $result["Result"] = "Failed"
                     $result["Message"] = $_.Exception.Message
                 }
-                [PSCustomObject]$result
+                
+                if (-not $WhatIfPreference) { [PSCustomObject]$result }
             }
         }
     }

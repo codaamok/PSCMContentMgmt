@@ -196,7 +196,7 @@ function Import-DPContent {
                         $result["Message"] = $_.Exception.Message
                     }
                     
-                    [PSCustomObject]$result
+                    if (-not $WhatIfPreference) { [PSCustomObject]$result }
                 }
                 else {
                     Write-Warning ("File '{0}' is not identifiable, skipping" -f $File.Name)
@@ -244,7 +244,7 @@ function Import-DPContent {
                         $result["Message"] = $_.Exception.Message
                     }
 
-                    [PSCustomObject]$result
+                    if (-not $WhatIfPreference) { [PSCustomObject]$result }
                 }
                 else {
                     Write-Warning ("Could not find '{0}' ({1}) '{2}'" -f $ObjectID, [SMS_DPContentInfo]$ObjectType, $Path)
