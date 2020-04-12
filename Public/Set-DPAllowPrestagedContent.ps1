@@ -9,8 +9,6 @@ function Set-DPAllowPrestagedContent {
 
         This is the equivilant of checking the box in the distribution point's properties for "Enables this distribution point for prestaged content". Checked = $true, unchecked = $false.
     .PARAMETER SiteServer
-        Query SMS_DPContentInfo on this server.
-        
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
         
         Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.

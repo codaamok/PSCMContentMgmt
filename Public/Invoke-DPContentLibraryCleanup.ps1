@@ -1,18 +1,33 @@
 function Invoke-DPContentLibraryCleanup {
     <#
     .SYNOPSIS
-        #TODO: Work this when Aaron confirm behaviour for primary & secondary sites
+        Invoke the ContentLibraryCleanup.exe utility against a distribution point.
+        #TODO: Add secondary site support when Aaron confirms this in the docs: https://github.com/MicrosoftDocs/SCCMdocs/issues/2298
     .DESCRIPTION
-        Long description
+        Invoke the ContentLibraryCleanup.exe utility against a distribution point.
+
+        This is essentially just a wrapper for the binary.
+
+        Worth noting that omitting the -Delete parameter is the equivilant of omitting the "/delete" parameter for the binary too. In other words, without -Delete it will just report on orphaned content and not delete it.
+    .PARAMETER DistributionPoint
+        Name of the distribution point (as it appears in ConfigMgr, usually FQDN) you want to clean up.
+    .PARAMETER ContentLibraryCleanupExe
+        Absolute path to ContentLibraryCleanup.exe.
+
+        The function attempts to discover the location of this exe, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
+    .PARAMETER Delete
+        Deletes orphaned content.
+    .PARAMETER SiteServer        
+        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+        
+        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+    .PARAMETER SiteCode
+        Site code of which the server specified by -SiteServer belongs to.
+        
+        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
+        
+        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
-    .NOTES
-        General notes
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (

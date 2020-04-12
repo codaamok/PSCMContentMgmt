@@ -28,12 +28,10 @@ function Import-DPContent {
     .PARAMETER ExtractContentExe
         Absolute path to ExtractContent.exe.
 
-        The function attempts to discover the location of this exe on disk, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
+        The function attempts to discover the location of this exe, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
     .PARAMETER ImportAllFromFolder
         Import all .pkgx files found -Folder regardless as to whether the object is currently in pending state or not.
-    .PARAMETER SiteServer
-        Query SMS_DPContentInfo on this server.
-        
+    .PARAMETER SiteServer       
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
         
         Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.

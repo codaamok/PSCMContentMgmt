@@ -27,8 +27,6 @@ function Get-DPContent {
     .PARAMETER Application
         Filter on applications
     .PARAMETER SiteServer
-        Query SMS_DPContentInfo on this server.
-        
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
         
         Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
