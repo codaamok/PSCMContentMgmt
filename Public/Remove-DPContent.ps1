@@ -47,9 +47,6 @@ function Remove-DPContent {
         [PSTypeName('PSCMContentMgmt')]
         [PSCustomObject[]]$InputObject,
 
-        [ValidateNotNullOrEmpty()]
-        [String]$DistributionPoint,
-
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
         [ValidateNotNullOrEmpty()]
         [String]$ObjectID,
@@ -57,6 +54,11 @@ function Remove-DPContent {
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
         [ValidateSet("Package","DriverPackage","DeploymentPackage","OperatingSystemImage","OperatingSystemInstaller","BootImage","Application")]
         [SMS_DPContentInfo]$ObjectType,
+
+        [Parameter(ParameterSetName="InputObject")]
+        [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
+        [ValidateNotNullOrEmpty()]
+        [String]$DistributionPoint,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
