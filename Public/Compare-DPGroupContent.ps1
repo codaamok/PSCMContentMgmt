@@ -1,11 +1,11 @@
-function Compare-DPContent {
+function Compare-DPGroupContent {
     <#
     .SYNOPSIS
         Returns a list of content objects missing from the given target server comapred to the source server.
     .PARAMETER Source
-        Name of the referencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of the referencing distribution point group you want to query.
     .PARAMETER Target
-        Name of the differencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of the differencing distribution point group you want to query.
     .PARAMETER SiteServer
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
 
@@ -17,12 +17,10 @@ function Compare-DPContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Compare-DPContent -Source dp1.contoso.com -Target dp2.contoso.com
+        PS C:\> Compare-DPGroupContent -Source "Asia DPs" -Target "Europe DPs"
 
-        Return content objects which are missing from dp2.contoso.com compared to dp1.contoso.com.
+        Return content objects which are missing from "Europe DPs" compared to "Asia DPs"
     .EXAMPLE
-        PS C:\> Compare-DPContent -Source dp1.contoso.com -Target dp2.contoso.com | Start-DPContentDistribution 
-
         #TODO: do distribution example here
     #>
     [CmdletBinding()]
@@ -52,8 +50,8 @@ function Compare-DPContent {
         }
 
         try {
-            Resolve-DP -Name $Source -SiteServer $SiteServer -SiteCode $SiteCode
-            Resolve-DP -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DPGroup -Name $Source -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DPGroup -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -68,19 +66,19 @@ function Compare-DPContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        $SourceContent = Get-DPContent -DistributionPoint $Source
-        $TargetContent = Get-DPContent -DistributionPoint $Target
+        $SourceContent = Get-DPGroupContent -DistributionPointGroup $Source
+        $TargetContent = Get-DPGroupContent -DistributionPointGroup $Target
     
         Compare-Object -ReferenceObject @($SourceContent) -DifferenceObject @($TargetContent) -Property ObjectID -PassThru | ForEach-Object {
             if ($_.SideIndicator -eq "<=") {
                 [PSCustomObject]@{
-                    PSTypeName        = "PSCMContentMgmt"
-                    ObjectName        = $_.ObjectName
-                    Description       = $_.Description
-                    ObjectType        = [SMS_DPContentInfo]$_.ObjectType
-                    ObjectID          = $_.ObjectID
-                    SourceSize        = $_.SourceSize
-                    DistributionPoint = $_.DistributionPoint
+                    PSTypeName             = "PSCMContentMgmt"
+                    ObjectName             = $_.ObjectName
+                    Description            = $_.Description
+                    ObjectType             = [SMS_DPContentInfo]$_.ObjectType
+                    ObjectID               = $_.ObjectID
+                    SourceSize             = $_.SourceSize
+                    DistributionPointGroup = $_.DistributionPointGroup
                 }  
             }
         }
