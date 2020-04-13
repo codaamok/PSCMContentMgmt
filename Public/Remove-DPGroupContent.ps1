@@ -73,6 +73,8 @@ function Remove-DPGroupContent {
                 Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
         }
+
+        $Target = $DistributionPointGroup
         
         $OriginalLocation = (Get-Location).Path
 
@@ -92,10 +94,7 @@ function Remove-DPGroupContent {
 
         foreach ($Object in $InputObject) {
             if ($LastDPGroup -ne $Object.DistributionPointGroup) {
-                if ($PSBoundParameters.ContainsKey("DistributionPointGroup")) {
-                    $Target = $DistributionPointGroup
-                }
-                else {
+                if (-not $PSBoundParameters.ContainsKey("DistributionPointGroup")) {
                     $Target = $Object.DistributionPointGroup
                 }
         
@@ -103,8 +102,11 @@ function Remove-DPGroupContent {
                     Resolve-DPGroup -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 catch {
-                    $PSCmdlet.ThrowTerminatingError($_)
+                    Write-Error -ErrorRecord $_
+                    return
                 } 
+
+                $LastDPGroup = $Object.DistributionPointGroup
             }
             else { 
                 $LastDPGroup = $Object.DistributionPointGroup

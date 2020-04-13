@@ -112,6 +112,8 @@ function Export-DPContent {
                 Write-Error -ErrorRecord $_
                 return
             }
+
+            $LastDP = $InputObject.DistributionPoint
         }
         else {
             $LastDP = $InputObject.DistributionPoint

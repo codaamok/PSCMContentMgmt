@@ -78,6 +78,8 @@ function Remove-DPContent {
             }
         }
 
+        $Target = $DistributionPoint
+
         $OriginalLocation = (Get-Location).Path
 
         if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
@@ -97,10 +99,7 @@ function Remove-DPContent {
 
         foreach ($Object in $InputObject) {   
             if ($LastDP -ne $Object.DistributionPoint) {
-                if ($PSBoundParameters.ContainsKey("DistributionPoint")) {
-                    $Target = $DistributionPoint
-                }
-                else {
+                if (-not $PSBoundParameters.ContainsKey("DistributionPoint")) {
                     $Target = $Object.DistributionPoint
                 }
         
@@ -108,8 +107,11 @@ function Remove-DPContent {
                     Resolve-DP -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
                 }
                 catch {
-                    $PSCmdlet.ThrowTerminatingError($_)
+                    Write-Error -ErrorRecord $_
+                    return
                 }
+
+                $LastDPGroup = $Object.DistributionPointGroup
             }
             else {
                 $LastDP = $Object.DistributionPoint
