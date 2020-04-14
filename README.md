@@ -79,6 +79,7 @@ PS C:\> Set-DPAllowPrestagedContent -DistributionPoint "NewDP.contoso.com" -Stat
 PS C:\> Start-DPContentDistribution -Folder "\\NewDP.contoso.com\export$" -DistributionPoint "NewDP.contoso.com"
 
 PS C:\> # log in to NewDP.contoso.com
+
 PS C:\> $env:ComputerName
 NewDP
 PS C:\> Import-DPContent -Folder "E:\export"
