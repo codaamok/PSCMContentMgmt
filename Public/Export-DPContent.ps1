@@ -43,7 +43,7 @@ function Export-DPContent {
 
         Exports package item P01000F6 from dp1.contoos.com and saves the exported .pkgx file in E:\prestaged.
     #>
-    [CmdletBinding(DefaultParameterSetName="InputObject")]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Low")]
     param (
         [Parameter(Mandatory, ValueFromPipeline, ParameterSetName="InputObject")]
         [PSTypeName('PSCMContentMgmt')]
@@ -146,8 +146,16 @@ function Export-DPContent {
                 $Command = 'Publish-CMPrestageContent -{0} "{1}" -DistributionPointName "{2}" -FileName "{3}"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $TargetDP, $Path
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {
-                    Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-                    $result["Result"] = "Success"
+                    if ($PSCmdlet.ShouldProcess(
+                        ("Would export '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $Folder),
+                        "Are you sure you want to continue?",
+                        ("Exporting '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $Folder))) {
+                            Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                            $result["Result"] = "Success"
+                    }
+                    else {
+                        $result["Result"] = "No change"
+                    }
                 }
                 catch {
                     Write-Error -ErrorRecord $_
