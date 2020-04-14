@@ -119,7 +119,7 @@ function Get-DPDistributionStatus {
             [PSCustomObject]@{
                 PSTypeName        = "PSCMContentMgmt"
                 ObjectID          = $_.PackageID
-                ObjectName        = [SMS_PackageStatusDistPointsSummarizer_PackageType]$_.PackageType
+                ObjectType        = [SMS_PackageStatusDistPointsSummarizer_PackageType]$_.PackageType
                 State             = [SMS_PackageStatusDistPointsSummarizer_State]$_.State
                 SourceVersion     = $_.SourceVersion
                 DistributionPoint = $DistributionPoint
