@@ -200,13 +200,13 @@ function Start-DPGroupContentDistribution {
                             Message    = $null
                         }
         
-                        $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointGroupName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $Object.DistributionPointGroup
+                        $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointGroupName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $TargetDPGroup
                         $ScriptBlock = [ScriptBlock]::Create($Command)
                         try {
                             if ($PSCmdlet.ShouldProcess(
-                                ("Would distribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Object.DistributionPointGroup),
+                                ("Would distribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDPGroup),
                                 "Are you sure you want to continue?",
-                                ("Distributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Object.DistributionPointGroup))) {
+                                ("Distributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDPGroup))) {
                                     Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                                     $result["Result"] = "Success"
                             }
