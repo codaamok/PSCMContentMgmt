@@ -130,9 +130,9 @@ function Remove-DPContent {
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {
                     if ($PSCmdlet.ShouldProcess(
-                        ("Would remove '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDP),
+                        ("Would remove '{0}' ({1}) from '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP),
                         "Are you sure you want to continue?",
-                        ("Removing '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDP))) {
+                        ("Removing '{0}' ({1}) from '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP))) {
                             Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                             $result["Result"] = "Success"
                     }

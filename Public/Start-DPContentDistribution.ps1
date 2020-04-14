@@ -146,9 +146,9 @@ function Start-DPContentDistribution {
                             $ScriptBlock = [ScriptBlock]::Create($Command)
                             try {
                                 if ($PSCmdlet.ShouldProcess(
-                                    ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $TargetDP),
+                                    ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $TargetDP),
                                     "Are you sure you want to continue?",
-                                    ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $TargetDP))) {
+                                    ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$InputObject.ObjectType, $TargetDP))) {
                                         Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                                         $result["Result"] = "Success"
                                 }
@@ -202,9 +202,9 @@ function Start-DPContentDistribution {
                         $ScriptBlock = [ScriptBlock]::Create($Command)
                         try {
                             if ($PSCmdlet.ShouldProcess(
-                                ("Would distribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDP),
+                                ("Would distribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP),
                                 "Are you sure you want to continue?",
-                                ("Distributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDP))) {
+                                ("Distributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP))) {
                                     Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                                     $result["Result"] = "Success"
                             }

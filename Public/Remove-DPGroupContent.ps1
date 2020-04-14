@@ -127,9 +127,9 @@ function Remove-DPGroupContent {
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {
                     if ($PSCmdlet.ShouldProcess(
-                        ("Would remove '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDPGroup),
+                        ("Would remove '{0}' ({1}) from '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDPGroup),
                         "Are you sure you want to continue?",
-                        ("Removing '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDPGroup))) {
+                        ("Removing '{0}' ({1}) from '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDPGroup))) {
                             Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                             $result["Result"] = "Success"
                     }

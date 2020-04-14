@@ -51,10 +51,6 @@ function Export-DPContent {
 
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
         [ValidateNotNullOrEmpty()]
-        [String]$DistributionPoint,
-
-        [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
-        [ValidateNotNullOrEmpty()]
         [String]$ObjectID,
 
         [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
@@ -72,6 +68,10 @@ function Export-DPContent {
             }
         })]
         [String]$Folder,
+
+        [Parameter(Mandatory, ParameterSetName="SpecifyProperties")]
+        [ValidateNotNullOrEmpty()]
+        [String]$DistributionPoint,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
