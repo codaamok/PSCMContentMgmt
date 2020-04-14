@@ -35,9 +35,17 @@ function Start-DPGroupContentDistribution {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-    # TODO: do examples
+        PS C:\> Compare-DPGroupContent -Source "London DPs" -Target "Mancester DPs" | Start-DPGroupContentDistribution -DistributionPointGroup "Mancester DPs" -WhatIf
+
+        Compares the missing content objects in group Manchester DPs compared to "London DPs", and distributes them to distribution point group Manchester DPs.
     .EXAMPLE
+        PS C:\> Start-DPGroupContentDistribution -Folder "E:\exported" -DistributionPointGroup "London DPs" -WhatIf
+
+        For all .pkgx files in folder "E:\exported" that use the following naming convention "<ObjectType>_<ObjectID>.pkgx", distributes them to distribution point group "London DPs".
     .EXAMPLE
+        PS C:\> Start-DPGroupContentDistribution -ObjectID ACC00007 -ObjectType Package -DistributionPointGroup "London DPs" -WhatIf
+        
+        Nothing more than a wrapper for Start-CMContentDistribution. Distributes package ACC00007 to distribution point group "London DPs".
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Medium")]
     param (
@@ -68,6 +76,7 @@ function Start-DPGroupContentDistribution {
         [Parameter(ParameterSetName="InputObject")]
         [Parameter(Mandatory, ParameterSetName="Properties")]
         [Parameter(Mandatory, ParameterSetName="Folder")]
+        [ValidateNotNullOrEmpty()]
         [String]$DistributionPointGroup,
 
         [Parameter()]
@@ -88,11 +97,26 @@ function Start-DPGroupContentDistribution {
             }
         }
 
-        if ($PSCmdlet.ParameterSetName -eq "Folder") {
-            $Files = Get-ChildItem -Path $Folder -Filter "*.pkgx"
+        $TargetDPGroup = $DistributionPointGroup
+
+        if ($PSCmdlet.ParameterSetName -ne "InputObject") {
+            $InputObject = [PSCustomObject]@{
+                ObjectID               = $ObjectID
+                ObjectType             = $ObjectType
+                DistributionPointGroup = $TargetDPGroup
+            }
         }
 
-        $Target = $DistributionPointGroup
+        if ($PSCmdlet.ParameterSetName -eq "Folder") {
+            $Files = Get-ChildItem -Path $Folder -Filter "*.pkgx"
+
+            try {
+                Resolve-DPGroup -Name $TargetDPGroup -SiteServer $SiteServer -SiteCode $SiteCode
+            }
+            catch {
+                $PSCmdlet.ThrowTerminatingError($_)
+            }
+        }
 
         $OriginalLocation = (Get-Location).Path
 
@@ -103,35 +127,86 @@ function Start-DPGroupContentDistribution {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        switch ($PSCmdlet.ParameterSetName) {
-            "Folder" {
-                try {
-                    Resolve-DPGroup -Name $DistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
-                }
-                catch {
-                    $PSCmdlet.ThrowTerminatingError($_)
-                }
-                foreach ($File in $Files) {
-                    if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
-                        $InputObject = [PSCustomObject]@{
-                            ObjectID   = $Matches.ObjectID
-                            ObjectType = $Matches.ObjectType
+        try {
+            switch ($PSCmdlet.ParameterSetName) {
+                "Folder" {
+                    foreach ($File in $Files) {
+                        if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
+                            $InputObject = [PSCustomObject]@{
+                                ObjectID   = $Matches.ObjectID
+                                ObjectType = $Matches.ObjectType
+                            }
+        
+                            $result = @{
+                                PSTypeName = "PSCMContentMgmtDistribute" 
+                                ObjectID   = $InputObject.ObjectID
+                                ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
+                                Message    = $null
+                            }
+
+                            $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointGroupName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $TargetDPGroup
+                            $ScriptBlock = [ScriptBlock]::Create($Command)
+                            try {
+                                if ($PSCmdlet.ShouldProcess(
+                                    ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $TargetDPGroup),
+                                    "Are you sure you want to continue?",
+                                    ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $TargetDPGroup))) {
+                                        Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                                        $result["Result"] = "Success"
+                                }
+                                else {
+                                    $result["Result"] = "No change"
+                                }
+                            }
+                            catch {
+                                Write-Error -ErrorRecord $_
+                                $result["Result"] = "Failed"
+                                $result["Message"] = $_.Exception.Message
+                            }
+                            
+                            if (-not $WhatIfPreference) { [PSCustomObject]$result }
                         }
-    
-                        $result = @{
-                            PSTypeName = "PSCMContentMgmtDistribute" 
-                            ObjectID   = $InputObject.ObjectID
-                            ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
-                            Message    = $null
+                        else {
+                            Write-Warning ("Skipping '{0}'" -f $File.Name)
+                        }
+                    }
+                }
+                default {
+                    foreach ($Object in $InputObject) {
+                        switch ($true) {
+                            ($LastDPGroup -ne $Object.DistributionPointGroup -And -not $PSBoundParameters.ContainsKey("DistributionPointGroup")) {
+                                $TargetDPGroup = $Object.DistributionPointGroup
+                            }
+                            ($LastDPGroup -ne $TargetDPGroup) {
+                                try {
+                                    Resolve-DPGroup -Name $TargetDPGroup -SiteServer $SiteServer -SiteCode $SiteCode
+                                }
+                                catch {
+                                    Write-Error -ErrorRecord $_
+                                    return
+                                }
+                                
+                                $LastDPGroup = $TargetDPGroup
+                            }
+                            default {
+                                $LastDPGroup = $TargetDPGroup
+                            }
                         }
 
-                        $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointGroupName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $Target
+                        $result = @{
+                            PSTypeName = "PSCMContentMgmtDistribute" 
+                            ObjectID   = $Object.ObjectID
+                            ObjectType = $Object.ObjectType
+                            Message    = $null
+                        }
+        
+                        $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointGroupName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $Object.DistributionPointGroup
                         $ScriptBlock = [ScriptBlock]::Create($Command)
                         try {
                             if ($PSCmdlet.ShouldProcess(
-                                ("Would distribute '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $Target),
+                                ("Would distribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Object.DistributionPointGroup),
                                 "Are you sure you want to continue?",
-                                ("Distributing '{0}' ({1}) to '{2}'" -f $InputObject.ObjectID, [SMS_DPContentInfo]$ObjectType, $Target))) {
+                                ("Distributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Object.DistributionPointGroup))) {
                                     Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
                                     $result["Result"] = "Success"
                             }
@@ -147,69 +222,12 @@ function Start-DPGroupContentDistribution {
                         
                         if (-not $WhatIfPreference) { [PSCustomObject]$result }
                     }
-                    else {
-                        Write-Warning ("Skipping '{0}'" -f $File.Name)
-                    }
                 }
             }
-            default {
-                if ($PSCmdlet.ParameterSetName -ne "InputObject") {
-                    $InputObject = [PSCustomObject]@{
-                        ObjectID          = $ObjectID
-                        ObjectType        = $ObjectType
-                    }
-                }
-
-                foreach ($Object in $InputObject) {
-                    if ($LastDPGroup -ne $Object.DistributionPointGroup) {
-                        if (-not $PSBoundParameters.ContainsKey("DistributionPointGroup")) {
-                            $Target = $Object.DistributionPointGroup
-                        }
-
-                        try {
-                            Resolve-DPGroup -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
-                        }
-                        catch {
-                            Write-Error -ErrorRecord $_
-                            return
-                        }
-
-                        $LastDPGroup = $Object.DistributionPointGroup
-                    }
-                    else {
-                        $LastDPGroup = $Object.DistributionPointGroup
-                    }
-
-                    $result = @{
-                        PSTypeName = "PSCMContentMgmtDistribute" 
-                        ObjectID   = $Object.ObjectID
-                        ObjectType = $Object.ObjectType
-                        Message    = $null
-                    }
-    
-                    $Command = 'Start-CMContentDistribution -{0} "{1}" -DistributionPointGroupName "{2}" -ErrorAction "Stop"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $Target
-                    $ScriptBlock = [ScriptBlock]::Create($Command)
-                    try {
-                        if ($PSCmdlet.ShouldProcess(
-                            ("Would distribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Target),
-                            "Are you sure you want to continue?",
-                            ("Distributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Target))) {
-                                Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-                                $result["Result"] = "Success"
-                        }
-                        else {
-                            $result["Result"] = "No change"
-                        }
-                    }
-                    catch {
-                        Write-Error -ErrorRecord $_
-                        $result["Result"] = "Failed"
-                        $result["Message"] = $_.Exception.Message
-                    }
-                    
-                    if (-not $WhatIfPreference) { [PSCustomObject]$result }
-                }
-            }
+        }
+        catch {
+            Set-Location $OriginalLocation 
+            $PSCmdlet.ThrowTerminatingError($_)
         }
     }
     end {

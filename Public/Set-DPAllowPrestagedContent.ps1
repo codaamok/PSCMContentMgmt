@@ -19,13 +19,14 @@ function Set-DPAllowPrestagedContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Set-DPAllowPrestageContent -DistributionPoint "dp1.contoso.com", "dp2.contoso.com" -State $true -Confirm:$false
+        PS C:\> Set-DPAllowPrestageContent -DistributionPoint "dp1.contoso.com" -State $true -WhatIf
 
-        Enables both distribution points to allow prestaged content and suppresses the confirmation prompt.
+        Enables "dp1.contoso.com" to allow prestaged content.
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Medium")]
     param (
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$DistributionPoint,
 
         [Parameter()]
@@ -70,30 +71,36 @@ function Set-DPAllowPrestagedContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        $result = @{
-            PSTypeName        = "PSCMContentMgmtPrestageSetting"
-            DistributionPoint = $DistributionPoint
-            Message           = $null
-        }
         try {
-            if ($PSCmdlet.ShouldProcess(
-                ("Would {0} allowing prestage content on '{1}'" -f $Action, $DistributionPoint),
-                "Are you sure you want to continue?",
-                ("Warning: Changing allow prestage setting to {0}d for '{1}'" -f $Action, $DistributionPoint))) {
-                    Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State
-                    $result["Result"] = "Success"
+            $result = @{
+                PSTypeName        = "PSCMContentMgmtPrestageSetting"
+                DistributionPoint = $DistributionPoint
+                Message           = $null
             }
-            else {
-                $result["Result"] = "No change"
+            try {
+                if ($PSCmdlet.ShouldProcess(
+                    ("Would {0} allowing prestage content on '{1}'" -f $Action, $DistributionPoint),
+                    "Are you sure you want to continue?",
+                    ("Warning: Changing allow prestage setting to {0}d for '{1}'" -f $Action, $DistributionPoint))) {
+                        Set-CMDistributionPoint -SiteSystemServerName $DistributionPoint -AllowPreStaging $State
+                        $result["Result"] = "Success"
+                }
+                else {
+                    $result["Result"] = "No change"
+                }
             }
+            catch {
+                Write-Error -ErrorRecord $_
+                $result["Result"] = "Failed"
+                $result["Message"] = $_.Exception.Message
+            }
+            
+            if (-not $WhatIfPreference) { [PSCustomObject]$result }
         }
         catch {
-            Write-Error -ErrorRecord $_
-            $result["Result"] = "Failed"
-            $result["Message"] = $_.Exception.Message
+            Set-Location $OriginalLocation 
+            $PSCmdlet.ThrowTerminatingError($_)
         }
-        
-        if (-not $WhatIfPreference) { [PSCustomObject]$result }
     }
     end {
         Set-Location $OriginalLocation

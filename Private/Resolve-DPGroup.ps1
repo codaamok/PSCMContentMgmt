@@ -33,6 +33,7 @@ function Resolve-DPGroup {
             }
         }
         catch {
+            Set-Location $OriginalLocation 
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }

@@ -1,9 +1,0 @@
-TODO: comment based help on all functions
-TODO: perhaps jobs on Export-DPContent
-TODO: ContentLibraryCleanup.exe (oh go on then)
-TODO: add parameter aliases
-TODO: add validatenotnullorempty() parameter attribute to parameters needing it
-TODO: add dp group support in Start-DPContentDistribution and any others that may benefit from it
-TODO: workflow of $SiteServer and $SiteCode default values for each function can't happen. [validatenotnullorempty()] doesn't apply to default values :-(
-TODO: It's dumb to validatenotnullorempty as well as null check in begin block on all functions, but you do it 'cuz of $CMSiteCode and $CMSiteServer
-TODO: re-consider broad try/catch in most functions: in some cases a terminating error is thrown leaving user on CM PSDrive

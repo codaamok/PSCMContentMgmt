@@ -35,6 +35,7 @@ function Resolve-DP {
             }
         }
         catch {
+            Set-Location $OriginalLocation 
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }

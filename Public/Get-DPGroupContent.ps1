@@ -44,6 +44,7 @@ function Get-DPGroupContent {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$DistributionPointGroup,
 
         [Parameter()]

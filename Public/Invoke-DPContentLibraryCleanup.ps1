@@ -28,6 +28,13 @@ function Invoke-DPContentLibraryCleanup {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
+        PS C:\> Invoke-DPContentLibraryCleanup.ps1 -DistributionPoint "dp1.contoso.com"
+
+        Queries "dp1.contoso.com" for orphaned content. Because of the missing -Delete parameter, data will not be deleted.
+    .EXAMPLE
+        PS C:\> Invoke-DPContentLibraryCleanup.ps1 -DistributionPoint "dp1.contoso.com" -ContentLibraryCleanupExe "C:\Sources\ContentLibraryCleanup.exe" -Delete
+
+        Deletes orphaned content on "dp1.contoso.com". Uses binary "C:\Sources\ContentLibraryCleanup.exe".
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
     param (
@@ -77,16 +84,11 @@ function Invoke-DPContentLibraryCleanup {
             $PSCmdlet.ThrowTerminatingError($_)
         }
 
-        $OriginalLocation = (Get-Location).Path
-
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
+        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+        $Query = "SELECT InstallDir FROM SMS_Site WHERE SiteCode = '{0}'" -f $SiteCode
 
         try {
-            $SiteInstallPath = (Get-CMSite -SiteCode $SiteCode -ErrorAction "Stop").InstallDir
+            $SiteInstallPath = (Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop").InstallDir
         }
         catch {
             Write-Error -ErrorRecord $_
@@ -96,6 +98,7 @@ function Invoke-DPContentLibraryCleanup {
             "\\{0}\SMS_{1}\cd.latest\SMSSETUP\TOOLS\ContentLibraryCleanup\ContentLibraryCleanup.exe" -f $SiteServer, $SiteCode
             "{0}\cd.latest\SMSSETUP\TOOLS\ContentLibraryCleanup\ContentLibraryCleanup.exe" -f $SiteInstallPath
         )
+        
         foreach ($Path in $Paths) {
             try {
                 if (Test-Path $Path -ErrorAction "Stop") {
@@ -120,20 +123,20 @@ function Invoke-DPContentLibraryCleanup {
             )
             $PSCmdlet.ThrowTerminatingError($ErrorRecord)
         }
-
-        Set-Location $OriginalLocation
     }
     process {
         if ($Delete.IsPresent) {
             if ($PSCmdlet.ShouldProcess(
                 ("Would perform content library cleanup on '{0}'" -f $DistributionPoint),
                 "Are you sure you want to continue?",
-                ("Warning: calling ContentLibraryCleanup.exe against '{0}'" -f $DistributionPoint))) {
-                    Invoke-NativeCommand $Path "/dp" $DistributionPoint "/q" "/delete"
+                ("Warning: calling ContentLibraryCleanup.exe against '{0}' with /delete parameter" -f $DistributionPoint))) {
+                    $pArgs = "/dp", $DistributionPoint, "/q", "/delete"
+                    & $Path $pArgs
             }
         }
         else {
-            Invoke-NativeCommand $Path "/dp" $DistributionPoint "/q"
+            $pArgs = "/dp", $DistributionPoint, "/q" 
+            & $Path $pArgs
         }
     }
     end {

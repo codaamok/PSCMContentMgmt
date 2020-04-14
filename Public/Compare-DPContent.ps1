@@ -1,7 +1,7 @@
 function Compare-DPContent {
     <#
     .SYNOPSIS
-        Returns a list of content objects missing from the given target server comapred to the source server.
+        Returns a list of content objects missing from the given target server compared to the source server.
     .PARAMETER Source
         Name of the referencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
     .PARAMETER Target
@@ -17,20 +17,28 @@ function Compare-DPContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Compare-DPContent -Source dp1.contoso.com -Target dp2.contoso.com
+        PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com"
 
-        Return content objects which are missing from dp2.contoso.com compared to dp1.contoso.com.
+        Return content objects which are missing from "dp2.contoso.com" compared to "dp1.contoso.com".
     .EXAMPLE
-        PS C:\> Compare-DPContent -Source dp1.contoso.com -Target dp2.contoso.com | Start-DPContentDistribution 
+        PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | Start-DPContentDistribution -DistributionPoint "dp2.contoso.com"
 
-        #TODO: do distribution example here
+        Compares the missing content objects on "dp2.contoso.com" compared to "dp1.contoso.com", and distributes them to "dp2.contoso.com"
+    .EXAMPLE
+        PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | Remove-DPContent 
+
+        Compares the missing content objects in "dp2.contoso.com" compared to "dp1.contoso.com", and removes them from distribution point "dp1.contoso.com".
+
+        Use -DistributionPoint with Remove-DPContent to either explicitly target "dp1.contoso.com" or some other group. In this example, "dp1.contoso.com" is the implicit target distribution point group as it reads the DistributionPointGroup property return from Compare-DPGroupContent.
     #>
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$Source,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$Target,
 
         [Parameter()]
@@ -58,14 +66,6 @@ function Compare-DPContent {
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
-        
-        $OriginalLocation = (Get-Location).Path
-
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
         $SourceContent = Get-DPContent -DistributionPoint $Source
@@ -86,6 +86,5 @@ function Compare-DPContent {
         }
     }
     end {
-        Set-Location $OriginalLocation
     }    
 }

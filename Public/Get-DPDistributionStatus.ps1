@@ -1,7 +1,7 @@
 function Get-DPContentDistributionStatus {
     <#
     .SYNOPSIS
-        Retrieve the content distribution status of all objects for a distribution point
+        Retrieve the content distribution status of all objects for a distribution point.
     .PARAMETER DistributionPoint
         Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
     .PARAMETER Distributed
@@ -35,11 +35,12 @@ function Get-DPContentDistributionStatus {
     .EXAMPLE
         PS C:\> Get-DPContentDistributionStatus -DistributionPoint "dp1.contoso.com"
 
-        Gets the content distribution status for all objects on dp1.contoso.com.
+        Gets the content distribution status for all objects on "dp1.contoso.com".
     #>
     [CmdletBinding()]
     param (
         [ParameteR(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$DistributionPoint,
 
         [Parameter()]
@@ -93,14 +94,6 @@ function Get-DPContentDistributionStatus {
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
-
-        $OriginalLocation = (Get-Location).Path
-
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
         $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
@@ -134,6 +127,5 @@ function Get-DPContentDistributionStatus {
         }
     }
     end {
-        Set-Location $OriginalLocation
     }
 }

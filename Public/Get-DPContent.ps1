@@ -44,6 +44,7 @@ function Get-DPContent {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$DistributionPoint,
 
         [Parameter()]

@@ -1,7 +1,7 @@
 function Compare-DPGroupContent {
     <#
     .SYNOPSIS
-        Returns a list of content objects missing from the given target server comapred to the source server.
+        Returns a list of content objects missing from the given target server compared to the source server.
     .PARAMETER Source
         Name of the referencing distribution point group you want to query.
     .PARAMETER Target
@@ -21,14 +21,24 @@ function Compare-DPGroupContent {
 
         Return content objects which are missing from "Europe DPs" compared to "Asia DPs"
     .EXAMPLE
-        #TODO: do distribution example here
+        PS C:\> Compare-DPGroupContent -Source "London DPs" -Target "Mancester DPs" | Start-DPGroupContentDistribution -DistributionPointGroup "Mancester DPs"
+
+        Compares the missing content objects in group Manchester DPs compared to "London DPs", and distributes them to distribution point group Manchester DPs.
+    .EXAMPLE
+        PS C:\> Compare-DPGroupContent -Source "London DPs" -Target "Mancester DPs" | Remove-DPGroupContent 
+
+        Compares the missing content objects in group Manchester DPs compared to "London DPs", and removes them from distribution point group "London DPs".
+
+        Use -DistributionPointGroup with Remove-DPGroupContent to either explicitly target "London DPs" or some other group. In this example, "London DPs" is the implicit target distribution point group as it reads the DistributionPointGroup property return from Compare-DPGroupContent.
     #>
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$Source,
 
         [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [String]$Target,
 
         [Parameter()]
@@ -56,14 +66,6 @@ function Compare-DPGroupContent {
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
-        
-        $OriginalLocation = (Get-Location).Path
-
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
         $SourceContent = Get-DPGroupContent -DistributionPointGroup $Source
@@ -84,6 +86,5 @@ function Compare-DPGroupContent {
         }
     }
     end {
-        Set-Location $OriginalLocation
     }    
 }

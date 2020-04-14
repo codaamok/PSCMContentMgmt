@@ -33,7 +33,11 @@ function Export-DPContent {
     .EXAMPLE
         PS C:\> Get-DPContent -DistributionPoint "dp1.contoos.com" | Export-DPContent -Folder "E:\prestaged"
 
-        Gathers all content objects on dp1.contoso.com and exports them to .pkgx files in E:\prestaged, overwriting any files that already exist with the same name.
+        Gathers all content objects on "dp1.contoso.com" and exports them to .pkgx files in E:\prestaged, overwriting any files that already exist with the same name.
+    .EXAMPLE
+        PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | Export-DPContent -Folder "E:\prestaged"
+
+        Compares the missing content objects on "dp2.contoso.com" compared to "dp1.contoso.com", and exports them to "E:\prestaged".
     .EXAMPLE
         PS C:\> Export-DPContent -DistributionPoint "dp1.contoso.com" -ObjectID "P01000F6" -ObjectType "Package" -Folder "E:\prestaged"
 
@@ -87,11 +91,13 @@ function Export-DPContent {
             }
         }
 
+        $TargetDP = $DistributionPoint
+
         if ($PSCmdlet.ParameterSetName -ne "InputObject") {
             $InputObject = [PSCustomObject]@{
                 ObjectID          = $ObjectID
                 ObjectType        = $ObjectType
-                DistributionPoint = $DistributionPoint
+                DistributionPoint = $TargetDP
             }
         }
 
@@ -104,44 +110,58 @@ function Export-DPContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        if ($LastDP -ne $InputObject.DistributionPoint) {
-            try {     
-                Resolve-DP -Name $InputObject.DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
-            }
-            catch {
-                Write-Error -ErrorRecord $_
-                return
-            }
-
-            $LastDP = $InputObject.DistributionPoint
-        }
-        else {
-            $LastDP = $InputObject.DistributionPoint
-        }
-
-        $File = "{0}_{1}.pkgx" -f [int]$InputObject.ObjectType, $InputObject.ObjectID
-        $Path = Join-Path -Path $Folder -ChildPath $File
-
-        $result = @{ 
-            PSTypeName = "PSCMContentMgmtPrestage"
-            ObjectID   = $InputObject.ObjectID
-            ObjectType = $InputObject.ObjectType
-            Message    = $null
-        }
-
-        $Command = 'Publish-CMPrestageContent -{0} "{1}" -DistributionPointName "{2}" -FileName "{3}"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$InputObject.ObjectType, $InputObject.ObjectID, $InputObject.DistributionPoint, $Path
-        $ScriptBlock = [ScriptBlock]::Create($Command)
         try {
-            Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-            $result["Result"] = "Success"
+            foreach ($Object in $InputObject) {
+                switch ($true) {
+                    ($LastDP -ne $Object.DistributionPoint -And -not $PSBoundParameters.ContainsKey("DistributionPoint")) {
+                        $TargetDP = $Object.DistributionPoint
+                    }
+                    ($LastDP -ne $TargetDP) {
+                        try {
+                            Resolve-DP -Name $TargetDP -SiteServer $SiteServer -SiteCode $SiteCode
+                        }
+                        catch {
+                            Write-Error -ErrorRecord $_
+                            return
+                        }
+                        
+                        $LastDP = $TargetDP
+                    }
+                    default {
+                        $LastDP = $TargetDP
+                    }
+                }
+
+                $File = "{0}_{1}.pkgx" -f [int]$Object.ObjectType, $Object.ObjectID
+                $Path = Join-Path -Path $Folder -ChildPath $File
+        
+                $result = @{ 
+                    PSTypeName = "PSCMContentMgmtPrestage"
+                    ObjectID   = $Object.ObjectID
+                    ObjectType = $Object.ObjectType
+                    Message    = $null
+                }
+        
+                #TODO: perhaps use jobs
+                $Command = 'Publish-CMPrestageContent -{0} "{1}" -DistributionPointName "{2}" -FileName "{3}"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $TargetDP, $Path
+                $ScriptBlock = [ScriptBlock]::Create($Command)
+                try {
+                    Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                    $result["Result"] = "Success"
+                }
+                catch {
+                    Write-Error -ErrorRecord $_
+                    $result["Result"] = "Failed"
+                    $result["Message"] = $_.Exception.Message
+                }
+                
+                if (-not $WhatIfPreference) { [PSCustomObject]$result }
+            }
         }
         catch {
-            Write-Error -ErrorRecord $_
-            $result["Result"] = "Failed"
-            $result["Message"] = $_.Exception.Message
+            Set-Location $OriginalLocation 
+            $PSCmdlet.ThrowTerminatingError($_)
         }
-        
-        if (-not $WhatIfPreference) { [PSCustomObject]$result }
     }
     end {
         Set-Location $OriginalLocation

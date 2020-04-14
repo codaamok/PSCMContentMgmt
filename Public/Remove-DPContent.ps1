@@ -29,15 +29,15 @@ function Remove-DPContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE 
-        PS C:\> Get-DPContent -DistributionPoint "dp.contoso.com" | Remove-DPContent
+        PS C:\> Get-DPContent -DistributionPoint "dp.contoso.com" | Remove-DPContent -WhatIf
 
         Removes all content from the distribution point "dp.contoso.com"
     .EXAMPLE 
-        PS C:\> Get-DPContent -DistributionPoint "dp.contoso.com" | Remove-DPContent -DistributionPoint "anotherdp.contoso.com"
+        PS C:\> Get-DPContent -DistributionPoint "dp.contoso.com" | Remove-DPContent -DistributionPoint "anotherdp.contoso.com" -WhatIf
 
         Removes all content found on distribution point "dp.contoso.com" from the distribution point "anotherdp.contoso.com"
     .EXAMPLE
-        PS C:\> Remove-DPContent -ObjectID "17014765" -ObjectType "Application" -DistributionPoint "dp.contoso.com"
+        PS C:\> Remove-DPContent -ObjectID "17014765" -ObjectType "Application" -DistributionPoint "dp.contoso.com" -WhatIf
 
         Removes application with CI_ID value of "17014765" from distribution point "dp.contoso.com"
     #>
@@ -78,7 +78,15 @@ function Remove-DPContent {
             }
         }
 
-        $Target = $DistributionPoint
+        $TargetDP = $DistributionPoint
+
+        if ($PSCmdlet.ParameterSetName -ne "InputObject") {
+            $InputObject = [PSCustomObject]@{
+                ObjectID          = $ObjectID
+                ObjectType        = $ObjectType
+                DistributionPoint = $TargetDP
+            }
+        }
 
         $OriginalLocation = (Get-Location).Path
 
@@ -89,62 +97,61 @@ function Remove-DPContent {
         Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
-        if ($PSCmdlet.ParameterSetName -ne "InputObject") {
-            $InputObject = [PSCustomObject]@{
-                ObjectID          = $ObjectID
-                ObjectType        = $ObjectType
-                DistributionPoint = $DistributionPoint
-            }
-        }
-
-        foreach ($Object in $InputObject) {   
-            if ($LastDP -ne $Object.DistributionPoint) {
-                if (-not $PSBoundParameters.ContainsKey("DistributionPoint")) {
-                    $Target = $Object.DistributionPoint
+        try {
+            foreach ($Object in $InputObject) {   
+                switch ($true) {
+                    ($LastDP -ne $Object.DistributionPoint -And -not $PSBoundParameters.ContainsKey("DistributionPoint")) {
+                        $TargetDP = $Object.DistributionPoint
+                    }
+                    ($LastDP -ne $TargetDP) {
+                        try {
+                            Resolve-DP -Name $TargetDP -SiteServer $SiteServer -SiteCode $SiteCode
+                        }
+                        catch {
+                            Write-Error -ErrorRecord $_
+                            return
+                        }
+                        
+                        $LastDP = $TargetDP
+                    }
+                    default {
+                        $LastDP = $TargetDP
+                    }
                 }
-        
+
+                $result = @{ 
+                    PSTypeName = "PSCMContentMgmtRemove"
+                    ObjectID   = $Object.ObjectID
+                    ObjectType = $Object.ObjectType
+                    Message    = $null
+                }
+                
+                $Command = 'Remove-CMContentDistribution -DistributionPointName "{0}" -{1} "{2}" -Force -ErrorAction "Stop"' -f $TargetDP, [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID
+                $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {
-                    Resolve-DP -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
+                    if ($PSCmdlet.ShouldProcess(
+                        ("Would remove '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDP),
+                        "Are you sure you want to continue?",
+                        ("Removing '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $TargetDP))) {
+                            Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
+                            $result["Result"] = "Success"
+                    }
+                    else {
+                        $result["Result"] = "No change"
+                    }
                 }
                 catch {
                     Write-Error -ErrorRecord $_
-                    return
+                    $result["Result"] = "Failed"
+                    $result["Message"] = $_.Exception.Message
                 }
-
-                $LastDPGroup = $Object.DistributionPointGroup
+                
+                if (-not $WhatIfPreference) { [PSCustomObject]$result }
             }
-            else {
-                $LastDP = $Object.DistributionPoint
-            }
-
-            $result = @{ 
-                PSTypeName = "PSCMContentMgmtRemove"
-                ObjectID   = $Object.ObjectID
-                ObjectType = $Object.ObjectType
-                Message    = $null
-            }
-            
-            $Command = 'Remove-CMContentDistribution -DistributionPointName "{0}" -{1} "{2}" -Force -ErrorAction "Stop"' -f $Target, [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID
-            $ScriptBlock = [ScriptBlock]::Create($Command)
-            try {
-                if ($PSCmdlet.ShouldProcess(
-                    ("Would remove '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Target),
-                    "Are you sure you want to continue?",
-                    ("Removing '{0}' ({1}) from '{2}'" -f $Object.ObjectID, [SMS_DPContentInfo]$Object.ObjectType, $Target))) {
-                        Invoke-Command -ScriptBlock $ScriptBlock -ErrorAction "Stop"
-                        $result["Result"] = "Success"
-                }
-                else {
-                    $result["Result"] = "No change"
-                }
-            }
-            catch {
-                Write-Error -ErrorRecord $_
-                $result["Result"] = "Failed"
-                $result["Message"] = $_.Exception.Message
-            }
-            
-            if (-not $WhatIfPreference) { [PSCustomObject]$result }
+        }
+        catch {
+            Set-Location $OriginalLocation 
+            $PSCmdlet.ThrowTerminatingError($_)
         }
     }
     end {

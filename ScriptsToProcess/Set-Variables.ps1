@@ -1,15 +1,16 @@
 try {
-    $CMSiteServer = Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection" -ErrorAction "Stop" | Select-Object -ExpandProperty Server
+    $RegKey = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection"
+    $CMSiteServer = Get-ItemProperty $RegKey -ErrorAction "Stop" | Select-Object -ExpandProperty Server
     try {
         $CMSiteCode = Get-CimInstance -ClassName "SMS_ProviderLocation" -Name "ROOT\SMS" -ComputerName $CMSiteServer -ErrorAction "Stop" | Select-Object -ExpandProperty SiteCode
     }
     catch {
-        Write-Warning ('Could not auto-populate variable $CMSiteCode, either set this yourself or pass -SiteCode to all functions (Reason: {0})' -f $_.Exception.Message)
+        Write-Warning ('Could not auto-populate variable $CMSiteCode, either set this yourself or pass -SiteCode to all functions (Reason: "{0}" while querying SMS_ProviderLocation on "{1}")' -f $_.Exception.Message, $CMSiteServer)
         $CMSiteCode = $null
     }
 }
 catch {
-    Write-Warning ('Could not auto-populate variable $CMSiteServer, either set this yourself or pass -SiteServer to all functions (Reason: {0})' -f $_.Exception.Message)
+    Write-Warning ('Could not auto-populate variable $CMSiteServer, either set this yourself or pass -SiteServer to all functions (Reason: "{0}" while trying to read "Server" value from key "{1}")' -f $_.Exception.Message, $RegKey)
     $CMSiteServer = $null
 }
 
