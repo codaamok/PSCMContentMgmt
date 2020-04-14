@@ -1,4 +1,4 @@
-function Get-DPContentDistributionStatus {
+function Get-DPDistributionStatus {
     <#
     .SYNOPSIS
         Retrieve the content distribution status of all objects for a distribution point.
@@ -33,7 +33,7 @@ function Get-DPContentDistributionStatus {
 
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Get-DPContentDistributionStatus -DistributionPoint "dp1.contoso.com"
+        PS C:\> Get-DPDistributionStatus -DistributionPoint "dp1.contoso.com"
 
         Gets the content distribution status for all objects on "dp1.contoso.com".
     #>
