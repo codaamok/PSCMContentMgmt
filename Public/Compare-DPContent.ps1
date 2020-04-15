@@ -68,8 +68,8 @@ function Compare-DPContent {
         }
     }
     process {
-        $SourceContent = Get-DPContent -DistributionPoint $Source
-        $TargetContent = Get-DPContent -DistributionPoint $Target
+        $SourceContent = Get-DPContent -DistributionPoint $Source -SiteServer $SiteServer -SiteCode $SiteCode
+        $TargetContent = Get-DPContent -DistributionPoint $Target -SiteServer $SiteServer -SiteCode $SiteCode
     
         Compare-Object -ReferenceObject @($SourceContent) -DifferenceObject @($TargetContent) -Property ObjectID -PassThru | ForEach-Object {
             if ($_.SideIndicator -eq "<=") {
