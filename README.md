@@ -59,6 +59,8 @@ Return objects which are on dp1.contoso.com but not on dp2.contoso.com.
 
 _Note: the same is available for groups with `Compare-DPGroupContent`._
 
+---
+
 ```powershell
 PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | Start-DPContentDistribution -DistributionPoint "dp2.contoso.com"
 ```
@@ -66,6 +68,8 @@ PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | 
 Distribute the missing objects to dp2.contoso.com.
 
 _Note: the same is available for groups with `Start-DPGroupContentDistribution`._
+
+---
 
 ```powershell
 PS C:\> Get-DPContent -DistributionPoint "OldDP.contoso.com" | Export-DPContent -Folder "\\NewDP.contoso.com\export$"
@@ -86,6 +90,8 @@ Migrate Distribution Points by exporting all content on OldDP.contoso.com and im
 
 _Note: in an ideal world you'll use Pull Distribution Points to stand up a new DP beside another, but this is another method if that isn't an option for you._
 
+---
+
 ```powershell
 PS C:\> Get-DPContent -DistributionPoint "dp1.contoso.com" -Package | Remove-DPContent
 ```
@@ -94,11 +100,15 @@ Remove all Packages from a distribution point.
 
 _Note: the same is available for groups with `Get-DPGroupContent` and `Remove-DPGroupContent`._
 
+---
+
 ```powershell
 PS C:\> Invoke-DPContentLibraryCleanup -DistributionPoint "dp1.contoso.com" -Delete
 ```
 
 Invoke the ContentLibraryCleanup.exe tool.
+
+---
 
 ## Known issues
 
