@@ -43,7 +43,7 @@ function Find-CMOBject {
                 [Parameter(Mandatory)]
                 [Hashtable]$CimParams
             )
-            $Query = "SELECT CI_ID,LocalizedDisplayName,LocalizedDescription FROM SMS_ApplicationLatest WHERE {0} = '{1}'" -f $PSCmdlet.Mandatory, ParameterSetName, $ID
+            $Query = "SELECT CI_ID,LocalizedDisplayName,LocalizedDescription FROM SMS_ApplicationLatest WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetName, $ID
             Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
                 "LocalizedDisplayName"
                 "LocalizedDescription"
