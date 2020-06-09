@@ -127,38 +127,45 @@ function Find-CMOBject {
                 }
             }
             "^[a-z0-9]{8}$" {
+                $PackageId = $_
                 $Classes = @(
                     "SMS_Package"
                     "SMS_DriverPackage"
-                    "SMS_ImagePackage" # OS Images
-                    "SMS_OperatingSystemInstallPackage" # OS Upgrade Packages
+                    "SMS_ImagePackage"
+                    "SMS_OperatingSystemInstallPackage"
                     "SMS_BootImagePackage"
                     "SMS_SoftwareUpdatesPackage"
-                    "SMS_ApplicationLatest" # lazy property
+                    "SMS_ApplicationLatest"
                 )
-                foreach ($Class in $Classes) {
-                    $Query = "SELECT PackageID, Name, Description, PackageType FROM {0} WHERE PackageID = '{1}'" -f $Class, $_
-                    $result = Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object @(
-                        "Name"
-                        "Description"
-                        @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.PackageType}}
-                        "PackageID"
-                    )
-
-                    if ($result -is [object] -and $result.Count -gt 0) {
-                        $result
-                        continue parent
-                    }
-
-                    if ($Class -eq "SMS_ApplicationLatest") {
-                        $Query = "SELECT * SMS_ApplicationLaest"
+                switch ($Classes) {
+                    "SMS_ApplicationLatest" {
+                        $Query = "SELECT * FROM {0}" -f $_
                         $AllApplications = Get-CimInstance -Query $Query @GetCimInstanceSplat
+                        
                         foreach ($Application in $AllApplications) {
                             $Properties = $Application | Get-CimInstance
-                            if ($Properties.PackageID -eq $_) {
+                            
+                            if ($Properties.PackageID -eq $PackageId) {
+                                # TODO pipe to select object
                                 $Application
                                 continue parent
                             }
+                        }
+                    }
+                    default {
+                        $Query = "SELECT PackageID, Name, Description, PackageType FROM {0} WHERE PackageID = '{1}'" -f $Class, $PackageId
+                        
+                        $result = Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object @(
+                            "Name"
+                            "Description"
+                            @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.PackageType}}
+                            "PackageID"
+                        )
+    
+                        if ($result -is [object] -and $result.Count -gt 0) {
+                            # TODO pipe to select object
+                            $result
+                            continue parent
                         }
                     }
                 }
