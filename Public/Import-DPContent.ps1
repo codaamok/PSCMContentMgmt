@@ -46,7 +46,7 @@ function Import-DPContent {
 
         Imports .pkgx files found in F:\prestaged but only if the objects are in "pending" state.
     .EXAMPLE
-        PS C:\> Import-DPContent -Folder "\\server\share\prestaged" -ImportAllFromFolder  -WhatIf
+        PS C:\> Import-DPContent -Folder "\\server\share\prestaged" -ImportAllFromFolder -WhatIf
 
         Imports all .pkgx files found in \\server\share\prestaged.
     #>

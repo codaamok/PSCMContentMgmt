@@ -39,14 +39,15 @@ function Find-CMOBject {
                 [Parameter(Mandatory, ParameterSetName="ModelName")]
                 [String]$ModelName,
                 [Parameter(Mandatory, ParameterSetName="CI_ID")]
-                [String]$CIID,
+                [String]$CI_ID,
                 [Parameter(Mandatory)]
                 [Hashtable]$CimParams
             )
-            $Query = "SELECT CI_ID,LocalizedDisplayName,LocalizedDescription FROM SMS_ApplicationLatest WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetName, $ID
+
+            $Query = "SELECT CI_ID,LocalizedDisplayName,LocalizedDescription FROM SMS_ApplicationLatest WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetName, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
             Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
-                "LocalizedDisplayName"
-                "LocalizedDescription"
+                @{Label="Name";Expression={$_.LocalizedDisplayName}}
+                @{Label="Description";Expression={$_.LocalizedDescription}}
                 @{Label="ObjectType";Expression={"Application"}}
                 "CI_ID"
             )
@@ -58,14 +59,14 @@ function Find-CMOBject {
                 [Parameter(Mandatory, ParameterSetName="ModelName")]
                 [String]$ModelName,
                 [Parameter(Mandatory, ParameterSetName="CI_ID")]
-                [String]$CIID,
+                [String]$CI_ID,
                 [Parameter(Mandatory)]
                 [Hashtable]$CimParams
             )
-            $Query = "SELECT AppModelName,CI_ID,LocalizedDisplayName FROM SMS_DeploymentType WHERE IsLatest = 'True' AND {0} = '{1}'" -f $PSCmdlet.ParameterSetNAme, $ID
+            $Query = "SELECT AppModelName,CI_ID,LocalizedDisplayName FROM SMS_DeploymentType WHERE IsLatest = 'True' AND {0} = '{1}'" -f $PSCmdlet.ParameterSetNAme, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
             Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
-                "LocalizedDisplayName"
-                "LocalizedDescription"
+                @{Label="Name";Expression={$_.LocalizedDisplayName}}
+                @{Label="Description";Expression={$_.LocalizedDescription}}
                 @{Label="ObjectType";Expression={"DeploymentType"}}
                 "CI_ID"
                 @{Label="AppCIID";Expression={ConvertTo-ModelNameCIID -ModelName $_.AppModelName -SiteServer $SiteServer -SiteCode $SiteCode}}
@@ -75,15 +76,37 @@ function Find-CMOBject {
         function Find-CMDriver {
             [CmdletBinding()]
             param (
-                [Parameter(Mandatory)]
-                [String]$CIID,
+                [Parameter(Mandatory, ParameterSetName="ModelName")]
+                [String]$ModelName,
+                [Parameter(Mandatory, ParameterSetName="CI_ID")]
+                [String]$CI_ID,
                 [Parameter(Mandatory)]
                 [Hashtable]$CimParams
             )
-            $Query = "SELECT CI_ID,LocalizedDisplayName FROM SMS_Driver WHERE CI_ID = '{0}'" -f $CIID
-            Get-Ciminstance -query $Query @CimParams | Select-Object -Property @(
-                "LocalizedDisplayName"
+            $Query = "SELECT CI_ID,LocalizedDisplayName FROM SMS_Driver WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetNAme, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
+            Get-Ciminstance -Query $Query @CimParams | Select-Object -Property @(
+                @{Label="Name";Expression={$_.LocalizedDisplayName}}
+                @{Label="Description";Expression={$_.LocalizedDescription}}
                 @{Label="ObjectType";Expression={"Driver"}}
+                "CI_ID"
+            )
+        }
+
+        function Find-CMCICB {
+            [CmdletBinding()]
+            param (
+                [Parameter(Mandatory, ParameterSetName="ModelName")]
+                [String]$ModelName,
+                [Parameter(Mandatory, ParameterSetName="CI_ID")]
+                [String]$CI_ID,
+                [Parameter(Mandatory)]
+                [Hashtable]$CimParams
+            )
+            $Query = "SELECT CI_ID,LocalizedDisplayName,CIType_ID FROM SMS_ConfigurationItemLatest WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetName, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
+            Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
+                @{Label="Name";Expression={$_.LocalizedDisplayName}}
+                @{Label="Description";Expression={$_.LocalizedDescription}}
+                @{Label="ObjectType";Expression={[SMS_ConfigurationItemLatest_CIType_ID]$_.CIType_ID}}
                 "CI_ID"
             )
         }
@@ -119,15 +142,24 @@ function Find-CMOBject {
             "^ScopeId_[\w-]+\/DeploymentType_[\w-]+$" { # likely modelname for deployment type
                 Find-CMDeploymentType -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^[0-9]{8}$" { # likely CI_ID for application or deployment type or driver
-                if ($null -eq (Find-CMApplication -CIID $_ -CimParams $GetCimInstanceSplat)) {
-                    if ($null -eq (Find-CMDeploymentType -CIID $_ -CimParams $GetCimInstanceSplat)) {
-                        Find-CMDriver -CIID $_ -CimParams $GetCimInstanceSplat
-                    }
-                }
+            "^ScopeId_[\w-]+\/DRIVER_[\w_]+$" {
+                Find-CMDriver -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^[a-z0-9]{8}$" {
-                $PackageId = $_
+            "^ScopeId_[\w-]+\/LogicalName_[\w-]+$" {
+                Find-CMCICB -ModelName $_ -CimParams $GetCimInstanceSplat
+            }
+            "^[0-9]{8}$" { # likely CI_ID for application or deployment type or driver
+                $r = Find-CMCICB -CI_ID $_ -CimParams $GetCimInstanceSplat
+                if ($r -is [Object]) { $r; continue parent }
+                $r = Find-CMApplication -CI_ID $_ -CimParams $GetCimInstanceSplat
+                if ($r -is [Object]) { $r; continue parent }
+                $r = Find-CMDeploymentType -CI_ID $_ -CimParams $GetCimInstanceSplat
+                if ($r -is [Object]) { $r; continue parent }
+                $r = Find-CMDriver -CI_ID $_ -CimParams $GetCimInstanceSplat
+                if ($r -is [Object]) { $r; continue parent }
+            }
+            ("^({0}|SMS)(\w){{5}}$" -f $SiteCode) {
+                $ObjectId = $_
                 $Classes = @(
                     "SMS_Package"
                     "SMS_DriverPackage"
@@ -135,6 +167,7 @@ function Find-CMOBject {
                     "SMS_OperatingSystemInstallPackage"
                     "SMS_BootImagePackage"
                     "SMS_SoftwareUpdatesPackage"
+                    "SMS_Collection"
                     "SMS_ApplicationLatest"
                 )
                 switch ($Classes) {
@@ -145,28 +178,36 @@ function Find-CMOBject {
                         foreach ($Application in $AllApplications) {
                             $Properties = $Application | Get-CimInstance
                             
-                            if ($Properties.PackageID -eq $PackageId) {
-                                # TODO pipe to select object
-                                $Application
+                            if ($Properties.PackageID -eq $ObjectId) {
+                                $Application | Select-Object -Property @(
+                                    @{Label="Name";Expression={$_.LocalizedDisplayName}}
+                                    @{Label="Description";Expression={$_.LocalizedDescription}}
+                                    @{Label="ObjectType";Expression={"Application"}}
+                                    "CI_ID"
+                                )
                                 continue parent
                             }
                         }
                     }
+                    "SMS_Collection" {
+                        $Query = "SELECT Name, CollectionID, Comment, CollectionType FROM {0} WHERE CollectionID = '{1}'" -f $_, $ObjectId
+
+                        Get-CimInstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
+                            "Name",
+                            @{Label="Description";Expression={$_.Comment}}
+                            @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.CollectionType}}
+                            "CollectionID"
+                        )
+                    }
                     default {
-                        $Query = "SELECT PackageID, Name, Description, PackageType FROM {0} WHERE PackageID = '{1}'" -f $Class, $PackageId
+                        $Query = "SELECT PackageID, Name, Description, PackageType FROM {0} WHERE PackageID = '{1}'" -f $_, $ObjectId
                         
-                        $result = Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object @(
+                        Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
                             "Name"
                             "Description"
                             @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.PackageType}}
                             "PackageID"
                         )
-    
-                        if ($result -is [object] -and $result.Count -gt 0) {
-                            # TODO pipe to select object
-                            $result
-                            continue parent
-                        }
                     }
                 }
             }

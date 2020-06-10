@@ -55,3 +55,14 @@ enum SMS_PackageStatusDistPointsSummarizer_State {
     CONTENT_UPDATING	        = 7
     CONTENT_MONITORING	        = 8
 }
+
+enum SMS_Collection {
+    OtherCollection
+    UserCollection    = 1
+    DeviceCollection  = 2
+}
+
+enum SMS_ConfigurationItemLatest_CIType_ID {
+    ConfigurationBaseline   = 2
+    ConfigurationItem       = 3
+}
