@@ -46,24 +46,24 @@ enum SMS_PackageStatusDistPointsSummarizer_PackageType {
 }
 
 enum SMS_PackageStatusDistPointsSummarizer_State {
-    DISTRIBUTED	                = 0
-    DISTRIBUTION_PENDING	    = 1
-    DISTRIBUTION_RETRYING	    = 2
-    DISTRIBUTION_FAILED	        = 3
-    REMOVAL_PENDING	            = 4
-    REMOVAL_RETRYING	        = 5
-    REMOVAL_FAILED	            = 6
-    CONTENT_UPDATING	        = 7
-    CONTENT_MONITORING	        = 8
+    DISTRIBUTION_FAILED
+    DISTRIBUTION_PENDING        = 1
+    DISTRIBUTION_RETRYING       = 2
+    DISTRIBUTION_FAILED         = 3
+    REMOVAL_PENDING             = 4
+    REMOVAL_RETRYING            = 5
+    REMOVAL_FAILED              = 6
+    CONTENT_UPDATING            = 7
+    CONTENT_MONITORING          = 8
 }
 
 enum SMS_Collection {
     OtherCollection
-    UserCollection    = 1
-    DeviceCollection  = 2
+    UserCollection              = 1
+    DeviceCollection            = 2
 }
 
 enum SMS_ConfigurationItemLatest_CIType_ID {
-    ConfigurationBaseline   = 2
-    ConfigurationItem       = 3
+    ConfigurationBaseline       = 2
+    ConfigurationItem           = 3
 }
