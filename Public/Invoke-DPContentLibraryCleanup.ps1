@@ -2,7 +2,6 @@ function Invoke-DPContentLibraryCleanup {
     <#
     .SYNOPSIS
         Invoke the ContentLibraryCleanup.exe utility against a distribution point.
-        #TODO: Add secondary site support when Aaron confirms this in the docs: https://github.com/MicrosoftDocs/SCCMdocs/issues/2298
     .DESCRIPTION
         Invoke the ContentLibraryCleanup.exe utility against a distribution point.
 

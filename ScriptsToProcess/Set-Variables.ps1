@@ -17,6 +17,7 @@ catch {
 enum SMS_DPContentInfo {
     Package
     DriverPackage               = 3
+    TaskSequence                = 4
     DeploymentPackage           = 5
     OperatingSystemImage        = 257
     OperatingSystemInstaller    = 259

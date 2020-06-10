@@ -142,7 +142,6 @@ function Export-DPContent {
                     Message    = $null
                 }
         
-                #TODO: perhaps use jobs
                 $Command = 'Publish-CMPrestageContent -{0} "{1}" -DistributionPointName "{2}" -FileName "{3}"' -f [SMS_DPContentInfo_CMParameters][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID, $TargetDP, $Path
                 $ScriptBlock = [ScriptBlock]::Create($Command)
                 try {

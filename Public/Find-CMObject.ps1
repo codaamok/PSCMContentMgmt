@@ -1,27 +1,59 @@
 function Find-CMOBject {
     <#
     .SYNOPSIS
-        Short description
+        A "searcher" function to find Configuration Manager objects which match a given ID.
     .DESCRIPTION
-        Long description
+        A "searcher" function to find Configuration Manager objects which match a given ID. The ID can be anything - the function will attempt to determine to ID type based on its structure using regex, and looking for objects based on its predicted type.
+        
+        The function searches for the following objects:
+            - Applications
+            - Deployment Types
+            - Packages
+            - Drivers
+            - Driver Packages
+            - Boot Images
+            - Operating System Images
+            - Operating System Upgrade Images
+            - Task Sequences
+            - Configuration Items
+            - Configuration Baselines
+            - User Collections
+            - Device Collections
+            - (Software Update) Deployment Packages
     .EXAMPLE
-        PS C:\> <example usage>
-        Explanation of what the example does
-    .INPUTS
-        Inputs (if any)
-    .OUTPUTS
-        Output (if any)
-    .NOTES
-        General notes
+        PS C:\> Find-CMObject -ID "ACC00048"
+
+        Finds any object which has the PackageID "ACC00048", this includes applications, collections, driver packages, boot images, OS images, OS upgrade images, task sequences and deployment packages.
+    .EXAMPLE 
+        PS C:\> Find-CMObject -ID "17007122"
+
+        Finds any object which has the CI_ID "17007122", this includes applications, deployment types, drivers, configuration items and configuration baselines.
+    .EXAMPLE
+        PS C:\> Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
+
+        Finds an application which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
+    .EXAMPLE
+        PS C:\> Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/DeploymentType_328afa1b-6fdb-4f13-8133-f97aab8edff2"
+
+        Find a deployment type which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/DeploymentType_328afa1b-6fdb-4f13-8133-f97aab8edff2"
+    .EXAMPLE
+        PS C:\> Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Baseline_0fc5de89-80c9-4a0e-8f92-7a3a99cfe747"
+
+        Finds a configuration baseline which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Baseline_0fc5de89-80c9-4a0e-8f92-7a3a99cfe747"
+    .EXAMPLE
+        PS C:\> Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/LogicalName_3a7dc9c1-3bd1-4cc3-b750-30cc9debe1ec"
+
+        Finds a configuration item which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/LogicalName_3a7dc9c1-3bd1-4cc3-b750-30cc9debe1ec"
+    .EXAMPLE
+        PS C:\> Find-CMOBject -ID "SCOPEID_B3FF3CC4-0319-4434-9D24-77689C53C615/DRIVER_4E2772AE8A92D353896D69ECCA435728C4B44957_180B604588D114D354CFF75148B012319F39A8EB8F7C5AB10C21084AEA14F0D5"
+        
+        Finds a driver which matches the ModelName "SCOPEID_B3FF3CC4-0319-4434-9D24-77689C53C615/DRIVER_4E2772AE8A92D353896D69ECCA435728C4B44957_180B604588D114D354CFF75148B012319F39A8EB8F7C5AB10C21084AEA14F0D5"
     #>
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         [String[]]$ID,
-
-        # TODO: switch to not return CMObject property (quicker)
-        # TODO: put application & deployment type actions in to a child function
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -32,86 +64,6 @@ function Find-CMOBject {
         [String]$SiteCode = $CMSiteCode
     )
     begin {
-        #region Define functions
-        function Find-CMApplication {
-            [CmdletBinding()]
-            param (
-                [Parameter(Mandatory, ParameterSetName="ModelName")]
-                [String]$ModelName,
-                [Parameter(Mandatory, ParameterSetName="CI_ID")]
-                [String]$CI_ID,
-                [Parameter(Mandatory)]
-                [Hashtable]$CimParams
-            )
-
-            $Query = "SELECT CI_ID,LocalizedDisplayName,LocalizedDescription FROM SMS_ApplicationLatest WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetName, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
-            Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
-                @{Label="Name";Expression={$_.LocalizedDisplayName}}
-                @{Label="Description";Expression={$_.LocalizedDescription}}
-                @{Label="ObjectType";Expression={"Application"}}
-                "CI_ID"
-            )
-        }
-
-        function Find-CMDeploymentType {
-            [CmdletBinding()]
-            param (
-                [Parameter(Mandatory, ParameterSetName="ModelName")]
-                [String]$ModelName,
-                [Parameter(Mandatory, ParameterSetName="CI_ID")]
-                [String]$CI_ID,
-                [Parameter(Mandatory)]
-                [Hashtable]$CimParams
-            )
-            $Query = "SELECT AppModelName,CI_ID,LocalizedDisplayName FROM SMS_DeploymentType WHERE IsLatest = 'True' AND {0} = '{1}'" -f $PSCmdlet.ParameterSetNAme, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
-            Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
-                @{Label="Name";Expression={$_.LocalizedDisplayName}}
-                @{Label="Description";Expression={$_.LocalizedDescription}}
-                @{Label="ObjectType";Expression={"DeploymentType"}}
-                "CI_ID"
-                @{Label="AppCIID";Expression={ConvertTo-ModelNameCIID -ModelName $_.AppModelName -SiteServer $SiteServer -SiteCode $SiteCode}}
-            )
-        }
-
-        function Find-CMDriver {
-            [CmdletBinding()]
-            param (
-                [Parameter(Mandatory, ParameterSetName="ModelName")]
-                [String]$ModelName,
-                [Parameter(Mandatory, ParameterSetName="CI_ID")]
-                [String]$CI_ID,
-                [Parameter(Mandatory)]
-                [Hashtable]$CimParams
-            )
-            $Query = "SELECT CI_ID,LocalizedDisplayName FROM SMS_Driver WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetNAme, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
-            Get-Ciminstance -Query $Query @CimParams | Select-Object -Property @(
-                @{Label="Name";Expression={$_.LocalizedDisplayName}}
-                @{Label="Description";Expression={$_.LocalizedDescription}}
-                @{Label="ObjectType";Expression={"Driver"}}
-                "CI_ID"
-            )
-        }
-
-        function Find-CMCICB {
-            [CmdletBinding()]
-            param (
-                [Parameter(Mandatory, ParameterSetName="ModelName")]
-                [String]$ModelName,
-                [Parameter(Mandatory, ParameterSetName="CI_ID")]
-                [String]$CI_ID,
-                [Parameter(Mandatory)]
-                [Hashtable]$CimParams
-            )
-            $Query = "SELECT CI_ID,LocalizedDisplayName,CIType_ID FROM SMS_ConfigurationItemLatest WHERE {0} = '{1}'" -f $PSCmdlet.ParameterSetName, (Get-Variable -Name $PSCmdlet.ParameterSetName).Value
-            Get-CimInstance -Query $Query @CimParams | Select-Object -Property @(
-                @{Label="Name";Expression={$_.LocalizedDisplayName}}
-                @{Label="Description";Expression={$_.LocalizedDescription}}
-                @{Label="ObjectType";Expression={[SMS_ConfigurationItemLatest_CIType_ID]$_.CIType_ID}}
-                "CI_ID"
-            )
-        }
-        #endregion
-
         switch ($null) {
             $SiteCode {
                 Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
@@ -145,7 +97,7 @@ function Find-CMOBject {
             "^ScopeId_[\w-]+\/DRIVER_[\w_]+$" {
                 Find-CMDriver -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^ScopeId_[\w-]+\/LogicalName_[\w-]+$" {
+            "^ScopeId_[\w-]+\/(LogicalName|Baseline)_[\w-]+$" {
                 Find-CMCICB -ModelName $_ -CimParams $GetCimInstanceSplat
             }
             "^[0-9]{8}$" { # likely CI_ID for application or deployment type or driver
@@ -160,6 +112,7 @@ function Find-CMOBject {
             }
             ("^({0}|SMS)(\w){{5}}$" -f $SiteCode) {
                 $ObjectId = $_
+
                 $Classes = @(
                     "SMS_Package"
                     "SMS_DriverPackage"
@@ -167,9 +120,11 @@ function Find-CMOBject {
                     "SMS_OperatingSystemInstallPackage"
                     "SMS_BootImagePackage"
                     "SMS_SoftwareUpdatesPackage"
+                    "SMS_TaskSequencePackage"
                     "SMS_Collection"
                     "SMS_ApplicationLatest"
                 )
+                
                 switch ($Classes) {
                     "SMS_ApplicationLatest" {
                         $Query = "SELECT * FROM {0}" -f $_
@@ -202,17 +157,22 @@ function Find-CMOBject {
                     default {
                         $Query = "SELECT PackageID, Name, Description, PackageType FROM {0} WHERE PackageID = '{1}'" -f $_, $ObjectId
                         
-                        Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
+                        $result = Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
                             "Name"
                             "Description"
                             @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.PackageType}}
                             "PackageID"
                         )
+
+                        if ($result -is [Object]) {		
+                            $result	
+                            continue parent	
+                        }
                     }
                 }
             }
             default {
-                # don't know
+                # Write-Warning ("Can not determine what type of object used for '{0}'" -f $_)
             }
         }
     }

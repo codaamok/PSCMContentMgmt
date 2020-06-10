@@ -164,7 +164,6 @@ function Import-DPContent {
         }
     }
     process {
-        # TODO is there a way to dedup the lines below so there's just one Invoke-NativeCommand call?
         if ($ImportAllFromFolder.IsPresent -eq $true) {
             foreach ($File in $Files) {
                 if ($File.Name -match "^(?<ObjectType>0|3|5|257|258|259|512)_(?<ObjectID>[A-Za-z0-9]+)\.pkgx$") {
