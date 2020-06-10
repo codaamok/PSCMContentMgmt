@@ -4,6 +4,7 @@ PowerShell module used for managing Microsoft Endpoint Manager Configuration Man
 
 ## Functions
 
+- Find-CMObject
 - Compare-DPContent
 - Compare-DPGroupContent
 - Export-DPContent
@@ -108,6 +109,23 @@ PS C:\> Invoke-DPContentLibraryCleanup -DistributionPoint "dp1.contoso.com" -Del
 
 Invoke the ContentLibraryCleanup.exe tool.
 
+___
+
+```powershell
+PS C:\> Find-CMObject -ID "ACC00048"
+```
+Finds any object which has the PackageID "ACC00048", this includes applications, collections, driver packages, boot images, OS images, OS upgrade images, task sequences and deployment packages.
+
+```powershell
+PS C:\> Find-CMObject -ID "17007122"
+```
+
+Finds any object which has the CI_ID "17007122", this includes applications, deployment types, drivers, configuration items and configuration baselines.
+
+```powershell
+PS C:\> Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
+```
+Finds an application which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
 ___
 
 ## Known issues
