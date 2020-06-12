@@ -46,7 +46,7 @@ enum SMS_PackageStatusDistPointsSummarizer_PackageType {
 }
 
 enum SMS_PackageStatusDistPointsSummarizer_State {
-    DISTRIBUTION_FAILED
+    DISTRIBUTED
     DISTRIBUTION_PENDING        = 1
     DISTRIBUTION_RETRYING       = 2
     DISTRIBUTION_FAILED         = 3
