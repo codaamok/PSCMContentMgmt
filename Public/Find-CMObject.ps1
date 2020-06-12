@@ -77,30 +77,22 @@ function Find-CMOBject {
             ComputerName    = $SiteServer
             Namespace       = "ROOT/SMS/Site_{0}" -f $SiteCode 
         }
-
-        $OriginalLocation = (Get-Location).Path
-
-        if ($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
-        }
-
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
     }
     process {
         :parent switch -Regex ($ID) {
-            "^ScopeId_[\w-]+\/Application_[\w-]+$" { # likely modelname for application
+            "^ScopeId_[\w-]+\/Application_[\w-]+$" { # ModelName for application
                 Find-CMApplication -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^ScopeId_[\w-]+\/DeploymentType_[\w-]+$" { # likely modelname for deployment type
+            "^ScopeId_[\w-]+\/DeploymentType_[\w-]+$" { # ModelName for deployment type
                 Find-CMDeploymentType -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^ScopeId_[\w-]+\/DRIVER_[\w_]+$" {
+            "^ScopeId_[\w-]+\/DRIVER_[\w_]+$" { # ModelName for drivers
                 Find-CMDriver -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^ScopeId_[\w-]+\/(LogicalName|Baseline)_[\w-]+$" {
+            "^ScopeId_[\w-]+\/(LogicalName|Baseline)_[\w-]+$" { # ModelName for CI or CB
                 Find-CMCICB -ModelName $_ -CimParams $GetCimInstanceSplat
             }
-            "^[0-9]{8}$" { # likely CI_ID for application or deployment type or driver
+            "^[0-9]{8}$" { # CI_ID for CI/CB, application, deployment type or driver
                 $r = Find-CMCICB -CI_ID $_ -CimParams $GetCimInstanceSplat
                 if ($r -is [Object]) { $r; continue parent }
                 $r = Find-CMApplication -CI_ID $_ -CimParams $GetCimInstanceSplat
@@ -110,7 +102,7 @@ function Find-CMOBject {
                 $r = Find-CMDriver -CI_ID $_ -CimParams $GetCimInstanceSplat
                 if ($r -is [Object]) { $r; continue parent }
             }
-            ("^({0}|SMS)(\w){{5}}$" -f $SiteCode) {
+            ("^({0}|SMS)(\w){{5}}$" -f $SiteCode) { # PackageID (or IDs of similar structure, e.g. collections) for each of the objects listed in the $Classes array below
                 $ObjectId = $_
 
                 $Classes = @(
@@ -127,6 +119,9 @@ function Find-CMOBject {
                 
                 switch ($Classes) {
                     "SMS_ApplicationLatest" {
+                        # This class is deliberately last in the array because it's the most taxing
+                        # To retrieve an application's PackageID, we must first gather all applications
+                        # and invoke Get-CimInstance again on each application CIM object to get the PackageID property because it's a lazy property
                         $Query = "SELECT * FROM {0}" -f $_
                         $AllApplications = Get-CimInstance -Query $Query @GetCimInstanceSplat
                         
@@ -150,7 +145,7 @@ function Find-CMOBject {
                         Get-CimInstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
                             "Name",
                             @{Label="Description";Expression={$_.Comment}}
-                            @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.CollectionType}}
+                            @{Label="ObjectType";Expression={[SMS_Collection]$_.CollectionType}}
                             "CollectionID"
                         )
                     }
@@ -177,6 +172,5 @@ function Find-CMOBject {
         }
     }
     end {
-        Set-Location $OriginalLocation
     }
 }
