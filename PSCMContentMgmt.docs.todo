@@ -1,0 +1,3 @@
+☐ add deployment ID as a packageid
+☐ ditch Set-Variables.ps1 in ScriptsToProcess and use module scope correctly
+☐ dynamically populate manifest with list of exported functions
