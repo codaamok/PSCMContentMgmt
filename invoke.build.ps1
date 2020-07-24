@@ -81,6 +81,9 @@ task CreateManifest {
     Update-ModuleManifest @UpdateModuleManifestSplat
 }
 
+# Synopsis: Test manifest
 task TestManifest {
+    # Arguably a moot point as Update-MooduleManifest obviously does some testing to ensure a valid manifest is there first before updating it
+    # However with the regex replace for ScriptsToProcess, I want to be sure
     $null = Test-ModuleManifest -Path $Script:ManifestFile
 }
