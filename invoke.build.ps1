@@ -1,7 +1,7 @@
 param (
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [String]$ModuleName = ([Regex]::Match((Get-Content -Path $BuildRoot\.git\config -ErrorAction Stop), "url = https://github\.com/codaamok/(.+)\.git")).Groups[1].Value
+    [String]$ModuleName = ([Regex]::Match((Get-Content -Path $BuildRoot\.git\config -ErrorAction Stop), "url = https://github\.com/.+/(.+)\.git")).Groups[1].Value
 )
 
 # Synopsis: Initiate the entire build process
