@@ -5,9 +5,9 @@ param (
 )
 
 # Synopsis: Initiate the entire build process
-task . clean, CreatePSM1, CopyFormatFiles, CreateScriptsToProcess, CreateManifest, TestManifest
+task . clean, CreatePSM1, CopyFormatFiles, CreateProcessScript, CreateManifest, TestManifest
 
-# Synopsis: Cleans the build directory
+# Synopsis: Cleans the build directory (except .gitkeep)
 task clean {
     Remove-Item -Path $BuildRoot\build\* -Exclude ".gitkeep" -Recurse -Force
 }
@@ -30,16 +30,21 @@ task CreatePSM1 {
     }
 }
 
-# Synopsis: Create a single Process.ps1 file of all content within scripts files under ScriptsToProcess\*
-task CreateScriptsToProcess {
-    $TargetFile = New-Item -Path $BuildRoot\build\$ModuleName\Process.ps1 -ItemType "File" -Force
+# Synopsis: Create a single Process.ps1 script file for all script files under ScriptsToProcess\* (if any)
+task CreateProcessScript {
+    $ScriptsToProcessFolder = "{0}\{1}\ScriptsToProcess" -f $BuildRoot, $ModuleName
 
-    $Files = @(Get-ChildItem $BuildRoot\$ModuleName\ScriptsToProcess -Filter *.ps1)
+    if (Test-Path $ScriptsToProcessFolder) {
+        $Script:ProcessFile = New-Item -Path $BuildRoot\build\$ModuleName\Process.ps1 -ItemType "File" -Force
+        $Files = @(Get-ChildItem $ScriptsToProcessFolder -Filter *.ps1)
+    }
+
     foreach ($File in $Files) {
-        Get-Content -Path $File | Add-Content -Path $TargetFile
+        Get-Content -Path $File | Add-Content -Path $Script:ProcessFile
+
         # Add new line only if the current file isn't the last one (minus 1 because array indexes from 0)
         if ($Files.IndexOf($File) -ne ($Files.Count - 1)) {
-            Write-Output "" | Add-Content -Path $TargetFile
+            Write-Output "" | Add-Content -Path $Script:ProcessFile
         }
     }
 }
@@ -72,10 +77,9 @@ task CreateManifest {
         }
     }
 
-    $ScriptsToProcess = Get-ChildItem -Path $BuildRoot\build\$ModuleName\Process.ps1 -ErrorAction Stop
-    if ($ScriptsToProcess) {
+    if ($Script:ProcessFile) {
         # Use this instead of Updatet-ModuleManifest due to https://github.com/PowerShell/PowerShellGet/issues/196
-        (Get-Content -Path $ManifestFile) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $ScriptsToProcess.Name) | Set-Content -Path $ManifestFile
+        (Get-Content -Path $ManifestFile) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $Script:ProcessFile.Name) | Set-Content -Path $ManifestFile
     }
     
     Update-ModuleManifest @UpdateModuleManifestSplat
