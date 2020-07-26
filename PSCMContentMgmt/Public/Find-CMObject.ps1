@@ -114,6 +114,7 @@ function Find-CMOBject {
                     "SMS_SoftwareUpdatesPackage"
                     "SMS_TaskSequencePackage"
                     "SMS_Collection"
+                    "SMS_DeploymentSummary"
                     "SMS_ApplicationLatest"
                 )
                 
@@ -147,6 +148,16 @@ function Find-CMOBject {
                             @{Label="Description";Expression={$_.Comment}}
                             @{Label="ObjectType";Expression={[SMS_Collection]$_.CollectionType}}
                             "CollectionID"
+                        )
+                    }
+                    "SMS_DeploymentSummary" {
+                        $Query = "SELECT ApplicationName, DeploymentID, CollectionID, CollectionName, PackageID FROM {0} WHERE DeploymentID = '{1}'" -f $_, $ObjectId
+
+                        Get-CimInstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
+                            @{Label="Name";Expression={"Deployment ID of '{0}' ({1})" -f $_.ApplicationName, $_.PackageId}}
+                            @{Label="Description";Expression={"Deployed to '{0}' ({1})" -f $_.CollectionName, $_.CollectionId}}
+                            @{Label="ObjectType";Expression={"DeploymentID"}}
+                            "DeploymentId"
                         )
                     }
                     default {
