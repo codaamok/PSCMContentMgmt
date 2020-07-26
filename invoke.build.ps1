@@ -48,7 +48,7 @@ task CreateRootModule {
         $Files = @(Get-ChildItem $BuildRoot\$ModuleName\$FunctionType -Filter *.ps1)
 
         foreach ($File in $Files) {
-            Get-Content -Path $File | Add-Content -Path $RootModule
+            Get-Content -Path $File.FullName | Add-Content -Path $RootModule
 
             # Add new line only if the current file isn't the last one (minus 1 because array indexes from 0)
             if ($Files.IndexOf($File) -ne ($Files.Count - 1)) {
@@ -56,7 +56,7 @@ task CreateRootModule {
             }
         }
 
-        '#endregion {0} functions' -f $FunctionType | Add-Content -Path $RootModule
+        '#endregion' -f $FunctionType | Add-Content -Path $RootModule
         Write-Output "" | Add-Content -Path $RootModule
     }
 }
