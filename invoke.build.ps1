@@ -4,29 +4,60 @@ param (
     [String]$ModuleName = ([Regex]::Match((Get-Content -Path $BuildRoot\.git\config -ErrorAction Stop), "url = https://github\.com/.+/(.+)\.git")).Groups[1].Value
 )
 
+
+
 # Synopsis: Initiate the entire build process
-task . clean, CreatePSM1, CopyFormatFiles, CreateProcessScript, CreateManifest, TestManifest
+task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CreateProcessScript, UpdateModuleManifest, TestManifest
 
 # Synopsis: Cleans the build directory (except .gitkeep)
-task clean {
+task Clean {
     Remove-Item -Path $BuildRoot\build\* -Exclude ".gitkeep" -Recurse -Force
 }
 
+task GetFunctionsToExport {
+    $Files = @(Get-ChildItem $BuildRoot\$ModuleName\Public -Filter *.ps1)
+
+    $Script:FunctionsToExport = foreach ($File in $Files) {
+        try {
+            $tokens = $errors = @()
+            $Ast = [System.Management.Automation.Language.Parser]::ParseFile(
+                $File.FullName,
+                [ref]$tokens,
+                [ref]$errors
+            )
+
+            if ($errors[0].ErrorId -eq 'FileReadError') {
+                throw [InvalidOperationException]::new($errors[0].Message)
+            }
+
+            Write-Output $Ast.EndBlock.Statements.Name
+        }
+        catch {
+            Write-Error -Exception $_.Exception -Category "OperationStopped"
+        }
+    }
+}
+
 # Synopsis: Creates a single .psm1 file of all private and public functions of the to-be-published module
-task CreatePSM1 {
-    $TargetFile = New-Item -Path $BuildRoot\build\$ModuleName\$ModuleName.psm1 -ItemType "File" -Force
+task CreateRootModule {
+    $RootModule = New-Item -Path $BuildRoot\build\$ModuleName\$ModuleName.psm1 -ItemType "File" -Force
 
     foreach ($FunctionType in "Private","Public") {
-        '#region {0} functions' -f $FunctionType | Add-Content -Path $TargetFile
+        '#region {0} functions' -f $FunctionType | Add-Content -Path $RootModule
+
         $Files = @(Get-ChildItem $BuildRoot\$ModuleName\$FunctionType -Filter *.ps1)
+
         foreach ($File in $Files) {
-            Get-Content -Path $File | Add-Content -Path $TargetFile
+            Get-Content -Path $File | Add-Content -Path $RootModule
+
+            # Add new line only if the current file isn't the last one (minus 1 because array indexes from 0)
             if ($Files.IndexOf($File) -ne ($Files.Count - 1)) {
-                Write-Output "" | Add-Content -Path $TargetFile
+                Write-Output "" | Add-Content -Path $RootModule
             }
         }
-        '#endregion {0} functions' -f $FunctionType | Add-Content -Path $TargetFile
-        Write-Output "" | Add-Content -Path $TargetFile
+
+        '#endregion {0} functions' -f $FunctionType | Add-Content -Path $RootModule
+        Write-Output "" | Add-Content -Path $RootModule
     }
 }
 
@@ -51,18 +82,18 @@ task CreateProcessScript {
 
 # Synopsis: Copy format files (if any)
 task CopyFormatFiles {
-    Get-ChildItem $BuildRoot\$ModuleName -Filter "*format.ps1xml" | Copy-Item -Destination $BuildRoot\build\$ModuleName
+    $Script:FormatFiles = Get-ChildItem $BuildRoot\$ModuleName -Filter "*format.ps1xml" | Copy-Item -Destination $BuildRoot\build\$ModuleName
 }
 
 # Synopsis: Copy and update the manifest
-task CreateManifest {
+task UpdateModuleManifest {
     $Script:ManifestFile = Copy-Item -Path $BuildRoot\$ModuleName\$ModuleName.psd1 -Destination $BuildRoot\build\$ModuleName -PassThru
     
     # Understand that if module isn't currently in the gallery, Invoke-Build will produce a terminating error and the build will fail!
     $PSGallery = Find-Module $ModuleName
 
     $UpdateModuleManifestSplat = @{
-        Path = '{0}\build\{1}\{2}.psd1' -f $BuildRoot, $ModuleName, $ModuleName
+        Path = $Script:ManifestFile
     }
 
     # Only ever increments the minor, I wonder how I could handle major. Maybe just trigger workflow based on releases and use the version from that instead?
@@ -70,16 +101,17 @@ task CreateManifest {
         $UpdateModuleManifestSplat["ModuleVersion"] = '{0}.{1}.{2}' -f ([System.Version]$PSGallery.Version).Major, (([System.Version]$PSGallery.Version).Minor + 1), (Get-Date -Format "yyyyMMdd")
     }
 
-    $FormatFiles = Get-ChildItem $BuildRoot\build\$ModuleName -Filter "*format.ps1xml"
-    if ($FormatFiles) {
-        $UpdateModuleManifestSplat["FormatsToProcess"] = foreach ($File in $FormatFiles) {
-            $File.Name
-        }
+    if ($Script:FormatFiles) {
+        $UpdateModuleManifestSplat["FormatsToProcess"] = $Script:FormatFiles.Name
     }
 
     if ($Script:ProcessFile) {
         # Use this instead of Updatet-ModuleManifest due to https://github.com/PowerShell/PowerShellGet/issues/196
-        (Get-Content -Path $ManifestFile) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $Script:ProcessFile.Name) | Set-Content -Path $ManifestFile
+        (Get-Content -Path $Script:ManifestFile) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $Script:ProcessFile.Name) | Set-Content -Path $ManifestFile
+    }
+
+    if ($Script:FunctionsToExport) {
+        $UpdateModuleManifestSplat["FunctionsToExport"] = $Script:FunctionsToExport
     }
     
     Update-ModuleManifest @UpdateModuleManifestSplat
