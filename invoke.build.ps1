@@ -71,7 +71,7 @@ task CreateProcessScript {
     }
 
     foreach ($File in $Files) {
-        Get-Content -Path $File | Add-Content -Path $Script:ProcessFile
+        Get-Content -Path $File.FullName | Add-Content -Path $Script:ProcessFile
 
         # Add new line only if the current file isn't the last one (minus 1 because array indexes from 0)
         if ($Files.IndexOf($File) -ne ($Files.Count - 1)) {
@@ -107,7 +107,7 @@ task UpdateModuleManifest {
 
     if ($Script:ProcessFile) {
         # Use this instead of Updatet-ModuleManifest due to https://github.com/PowerShell/PowerShellGet/issues/196
-        (Get-Content -Path $Script:ManifestFile) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $Script:ProcessFile.Name) | Set-Content -Path $ManifestFile
+        (Get-Content -Path $Script:ManifestFile.FullName) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $Script:ProcessFile.Name) | Set-Content -Path $ManifestFile
     }
 
     if ($Script:FunctionsToExport) {
