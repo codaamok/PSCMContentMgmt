@@ -7,7 +7,7 @@ param (
 
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CreateProcessScript, UpdateModuleManifest, TestManifest
+task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, UpdateModuleManifest, TestManifest
 
 # Synopsis: Cleans the build directory (except .gitkeep)
 task Clean {
@@ -83,6 +83,10 @@ task CreateProcessScript {
 # Synopsis: Copy format files (if any)
 task CopyFormatFiles {
     $Script:FormatFiles = Get-ChildItem $BuildRoot\$ModuleName -Filter "*format.ps1xml" | Copy-Item -Destination $BuildRoot\build\$ModuleName
+}
+
+task CopyLicense {
+    Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$ModuleName
 }
 
 # Synopsis: Copy and update the manifest
