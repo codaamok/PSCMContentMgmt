@@ -2,6 +2,13 @@ name: "Publish new version to PowerShell Gallery when something is pushed to the
 
 on: 
   push:
+    paths-ignore:
+      - .github/**
+      - build/**
+      - '*.md'
+      - '*.todo'
+      - '*.txt'
+
     branches:
       - master
 
