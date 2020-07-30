@@ -1,10 +1,18 @@
+#Requires -Module ChangelogManagmeent
+[CmdletBinding()]
 param (
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [String]$ModuleName = ([Regex]::Match((Get-Content -Path $BuildRoot\.git\config -ErrorAction Stop), "url = https://github\.com/.+/(.+)\.git")).Groups[1].Value
+    [String]$ModuleName = ([Regex]::Match((Get-Content -Path $BuildRoot\.git\config -ErrorAction Stop), "url = https://github\.com/.+/(.+)\.git")).Groups[1].Value,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [System.Version]$Version,
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [String[]]$ReleaseNotes
 )
-
-
 
 # Synopsis: Initiate the entire build process
 task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, UpdateModuleManifest, TestManifest
@@ -15,7 +23,7 @@ task Clean {
 }
 
 task GetFunctionsToExport {
-    $Files = @(Get-ChildItem $BuildRoot\$ModuleName\Public -Filter *.ps1)
+    $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\Public -Filter *.ps1)
 
     $Script:FunctionsToExport = foreach ($File in $Files) {
         try {
@@ -40,12 +48,12 @@ task GetFunctionsToExport {
 
 # Synopsis: Creates a single .psm1 file of all private and public functions of the to-be-published module
 task CreateRootModule {
-    $RootModule = New-Item -Path $BuildRoot\build\$ModuleName\$ModuleName.psm1 -ItemType "File" -Force
+    $RootModule = New-Item -Path $BuildRoot\build\$Script:ModuleName\$Script:ModuleName.psm1 -ItemType "File" -Force
 
     foreach ($FunctionType in "Private","Public") {
         '#region {0} functions' -f $FunctionType | Add-Content -Path $RootModule
 
-        $Files = @(Get-ChildItem $BuildRoot\$ModuleName\$FunctionType -Filter *.ps1)
+        $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\$FunctionType -Filter *.ps1)
 
         foreach ($File in $Files) {
             Get-Content -Path $File.FullName | Add-Content -Path $RootModule
@@ -63,10 +71,10 @@ task CreateRootModule {
 
 # Synopsis: Create a single Process.ps1 script file for all script files under ScriptsToProcess\* (if any)
 task CreateProcessScript {
-    $ScriptsToProcessFolder = "{0}\{1}\ScriptsToProcess" -f $BuildRoot, $ModuleName
+    $ScriptsToProcessFolder = "{0}\{1}\ScriptsToProcess" -f $BuildRoot, $Script:ModuleName
 
     if (Test-Path $ScriptsToProcessFolder) {
-        $Script:ProcessFile = New-Item -Path $BuildRoot\build\$ModuleName\Process.ps1 -ItemType "File" -Force
+        $Script:ProcessFile = New-Item -Path $BuildRoot\build\$Script:ModuleName\Process.ps1 -ItemType "File" -Force
         $Files = @(Get-ChildItem $ScriptsToProcessFolder -Filter *.ps1)
     }
 
@@ -82,28 +90,25 @@ task CreateProcessScript {
 
 # Synopsis: Copy format files (if any)
 task CopyFormatFiles {
-    $Script:FormatFiles = Get-ChildItem $BuildRoot\$ModuleName -Filter "*format.ps1xml" | Copy-Item -Destination $BuildRoot\build\$ModuleName
+    $Script:FormatFiles = Get-ChildItem $BuildRoot\$Script:ModuleName -Filter "*format.ps1xml" | Copy-Item -Destination $BuildRoot\build\$Script:ModuleName
 }
 
+# Synopsis: Copy LICENSE file (must exist)
 task CopyLicense {
-    Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$ModuleName
+    Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$Script:ModuleName
 }
 
 # Synopsis: Copy and update the manifest
 task UpdateModuleManifest {
-    $Script:ManifestFile = Copy-Item -Path $BuildRoot\$ModuleName\$ModuleName.psd1 -Destination $BuildRoot\build\$ModuleName -PassThru
+    $Script:ManifestFile = Copy-Item -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1 -Destination $BuildRoot\build\$Script:ModuleName -PassThru
     
-    # Understand that if module isn't currently in the gallery, Invoke-Build will produce a terminating error and the build will fail!
-    $PSGallery = Find-Module $ModuleName
-
     $UpdateModuleManifestSplat = @{
         Path = $Script:ManifestFile
     }
 
-    # Only ever increments the minor, I wonder how I could handle major. Maybe just trigger workflow based on releases and use the version from that instead?
-    if ($PSGallery) {
-        $UpdateModuleManifestSplat["ModuleVersion"] = '{0}.{1}.{2}' -f ([System.Version]$PSGallery.Version).Major, (([System.Version]$PSGallery.Version).Minor + 1), (Get-Date -Format "yyyyMMdd")
-    }
+    $UpdateModuleManifestSplat["ModuleVersion"] = $Version
+
+    $UpdateModuleManifestSplat["ReleaseNotes"] = $ReleaseNotes
 
     if ($Script:FormatFiles) {
         $UpdateModuleManifestSplat["FormatsToProcess"] = $Script:FormatFiles.Name
