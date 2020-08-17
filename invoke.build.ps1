@@ -15,7 +15,7 @@ param (
 )
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, UpdateModuleManifest, TestManifest
+task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CopyChangeLog, CreateProcessScript, UpdateModuleManifest, TestManifest
 
 # Synopsis: Cleans the build directory (except .gitkeep)
 task Clean {
@@ -96,6 +96,11 @@ task CopyFormatFiles {
 # Synopsis: Copy LICENSE file (must exist)
 task CopyLicense {
     Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$Script:ModuleName
+}
+
+# Synopsis: Copy CHANGELOG.md (must exist)
+task CopyChangeLog {
+    Copy-Item -Path $BuildRoot\CHANGELOG.md -Destination $BuildRoot\build\$Script:ModuleName
 }
 
 # Synopsis: Copy and update the manifest

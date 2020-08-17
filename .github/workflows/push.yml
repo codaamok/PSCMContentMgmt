@@ -7,14 +7,159 @@ on:
       - build/**
       - '*.md'
       - '*.todo'
-      - '*.txt'
+      - '**.psd1'
 
     branches:
       - master
 
 jobs:
+  get-ver-and-releasenotes:
+    name: Determine next version number and gather release notes
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2.3.1
+
+      - name: Set environment variables
+        run: |
+          $Username, $ProjectName = $env:GITHUB_REPOSITORY -split "/"
+          Write-Output "::set-env name=GH_PROJECTNAME::$ProjectName"
+          Write-Output "::set-env name=GH_USERNAME::$Username"
+        shell: pwsh
+
+      - name: Install dependent modules
+        run: |
+          $Modules = @(
+            "ChangelogManagement"
+            "InvokeBuild"
+          )
+          Install-Module -Name $Modules -Scope "CurrentUser" -Force -ErrorAction "Stop"
+
+      - name: Get module's current version on PSGallery, default to 0 if not found
+        run: |
+          try {
+            $PSGallery = Find-Module -Name $env:GH_PROJECTNAME -ErrorAction "Stop"
+          }
+          catch {
+            if ($_.Exception.Message -notmatch "No match was for the specified search criteria and module name") {
+              throw $_
+            }
+          }
+
+          if ($PSGallery) {
+            $r = $PSGallery | ConvertTo-Json
+          }
+          else {
+            $r = [PSCustomObject]@{
+              "Name"    = $env:GH_PROJECTNAME
+              "Version" = "0.0"
+            } | ConvertTo-Json
+          }
+
+          Write-Output "::set-env name=PSGalleryModuleInfo::$r"
+        shell: pwsh
+
+      - name: Read change log for next version and release notes
+        run: |
+          $ChangeLog = Get-ChangeLogData -Path .\CHANGELOG.md -ErrorAction "Stop"
+          $EmptyUnreleasedChangeLog = $true
+
+          $ReleaseNotes = foreach ($Property in $ChangeLog.Unreleased.Data.PSObject.Properties.Name) {
+            $Data = $ChangeLog.Unreleased.Data.$Property
+
+            if ($Data) {
+              $EmptyUnreleasedChangeLog = $false
+
+              Write-Output $Property
+
+              foreach ($item in $Data) {
+                Write-Output ("- {0}" -f $item)
+              }
+            }
+          }
+
+          if ($EmptyUnreleasedChangeLog -eq $true -Or $ReleaseNotes.Count -eq 0) {
+            throw "Can not deploy with empty change log"
+          }
+
+          Write-Output ("::set-env name=ChangeLog::{0}" -f ($ChangeLog | ConvertTo-Json -Depth 3))
+          # Convert array to string delimited by ";;", later to convert back to array using -split ";;" for Update-ModuleManifest
+          Write-Output ("::set-env name=ReleaseNotes::{0}" -f ([String]::Join(";;", $ReleaseNotes)))
+        shell: pwsh
+
+      - name: Determine next version number
+        run: |
+          $ChangeLog           = $env:ChangeLog | ConvertFrom-Json
+          $PSGalleryModuleInfo = $env:PSGalleryModuleInfo | ConvertFrom-Json
+
+          $Date = Get-Date -Format 'yyyyMMdd'
+
+          # If the last released version in the change log and latest version available in the PowerShell gallery don't match, throw an exception - get them level!
+          if ($null -ne $ChangeLog.Released[0].Version -And $ChangeLog.Released[0].Version -ne $PSGalleryModuleInfo.Version) {
+            throw "The latest released version in the changelog does not match the latest released version in the PowerShell gallery"
+          }
+          # If module isn't yet published in the PowerShell gallery, and there's no Released section in the change log, set initial version
+          elseif ($PSGalleryModuleInfo.Version -eq "0.0" -And $ChangeLog.Released.Count -eq 0) {
+            $VersionToPublish = [System.Version]::New(1, 0, $Date)
+          }
+          # If module isn't yet published in the PowerShell gallery, and there is a Released section in the change log, update version
+          elseif ($PSGalleryModuleInfo.Version -eq "0.0" -And $ChangeLog.Released.Count -ge 1) {
+            $CurrentVersion   = [System.Version]$ChangeLog.Released[0].Version
+            $VersionToPublish = [System.Version]::New($CurrentVersion.Major, $CurrentVersion.Minor + 1, $Date)
+          }
+          # If the last Released verison in the change log and currently latest verison in the PowerShell gallery are in harmony, update version
+          elseif ($ChangeLog.Released[0].Version -eq $PSGalleryModuleInfo.Version) {
+            $CurrentVersion   = [System.Version]$PSGalleryModuleInfo.Version
+            $VersionToPublish = [System.Version]::New($CurrentVersion.Major, $CurrentVersion.Minor + 1, $Date)
+          }
+          else {
+            Write-Output ("Latest release version from change log: {0}" -f $ChangeLog.Released[0].Version)
+            Write-Output ("Latest release version from PowerShell gallery: {0}" -f $PSGalleryModuleInfo.Version)
+            throw "Can not determine next version number"
+          }
+
+          Write-Output "::set-env name=VersionToPublish::$VersionToPublish"
+        shell: pwsh
+
+      - name: Update module manifest with version and release notes
+        run: |
+          $ChangeLog = $env:ChangeLog | ConvertFrom-Json
+          $ReleaseNotes = $env:ReleaseNotes -split ";;"
+          Update-ModuleManifest -Path .\$env:GH_PROJECTNAME.psd1 -ReleaseNotes $ReleaseNotes -ModuleVersion $env:VersionToPublish -ErrorAction "Stop"
+        shell: pwsh
+
+      - name: Update change log
+        run: |
+          $LinkPattern   = @{
+            FirstRelease  = "https://github.com/testuser/testrepo/tree/v{CUR}"
+            NormalRelease = "https://github.com/testuser/testrepo/compare/v{PREV}..v{CUR}"
+            Unreleased    = "https://github.com/testuser/testrepo/compare/v{CUR}..HEAD"
+          }
+
+          Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
+
+      - name: Initiate build
+        run: Invoke-Build
+        shell: pwsh
+
+      - name: Archive build
+        run: |
+          mkdir release
+          cd build/$GH_PROJECTNAME
+          zip -r ${GITHUB_WORKSPACE}/release/${GH_PROJECTNAME}_${VersionToPublish}.zip .
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ VersionToPublish }}
+          release_name: ${{ GH_PROJECTNAME }} ${{ VersionToPublish }}
+
   publish-to-psgallery:
     name: Publish to PSGallery
+    needs: getver-from-psgallery
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v1
