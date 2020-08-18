@@ -27,6 +27,9 @@ jobs:
           Write-Output "::set-env name=GH_USERNAME::$Username"
         shell: pwsh
 
+      - name: Create release directory
+        run: mkdir release
+
       - name: Install dependent modules
         run: |
           $Modules = @(
@@ -82,9 +85,9 @@ jobs:
             throw "Can not deploy with empty change log"
           }
 
+          Set-Content -Path ./release/releasenotes.txt -Value $ReleaseNotes -ErrorAction "Stop"
+
           Write-Output ("::set-env name=ChangeLog::{0}" -f ($ChangeLog | ConvertTo-Json -Depth 3))
-          # Convert array to string delimited by ";;", later to convert back to array using -split ";;" for Update-ModuleManifest
-          Write-Output ("::set-env name=ReleaseNotes::{0}" -f ([String]::Join(";;", $ReleaseNotes)))
         shell: pwsh
 
       - name: Determine next version number
@@ -123,8 +126,7 @@ jobs:
 
       - name: Update module manifest with version and release notes
         run: |
-          $ChangeLog = $env:ChangeLog | ConvertFrom-Json
-          $ReleaseNotes = $env:ReleaseNotes -split ";;"
+          $ReleaseNotes = Get-Content -Path ./release/releasenotes.txt
           Update-ModuleManifest -Path .\$env:GH_PROJECTNAME.psd1 -ReleaseNotes $ReleaseNotes -ModuleVersion $env:VersionToPublish -ErrorAction "Stop"
         shell: pwsh
 
@@ -144,7 +146,6 @@ jobs:
 
       - name: Archive build
         run: |
-          mkdir release
           cd build/$GH_PROJECTNAME
           zip -r ${GITHUB_WORKSPACE}/release/${GH_PROJECTNAME}_${VersionToPublish}.zip .
 
@@ -156,24 +157,32 @@ jobs:
         with:
           tag_name: ${{ VersionToPublish }}
           release_name: ${{ GH_PROJECTNAME }} ${{ VersionToPublish }}
+          body_path: release/releasenotes.txt
+          draft: false
+          prelease: false
 
-  publish-to-psgallery:
-    name: Publish to PSGallery
-    needs: getver-from-psgallery
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install InvokeBuild module
-      run: Install-Module InvokeBuild -ErrorAction Stop -Force
-      shell: pwsh
-    - name: Import InvokeBuild module
-      run: Import-Module InvokeBuild -ErrorAction Stop
-      shell: pwsh
-    - name: Invoke-Build
-      run: Invoke-Build
-      shell: pwsh
-    #- name: Publish module
-      #env:
-        #PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
-      #run: Publish-Module -Path .\build\*\ -NuGetApiKey $env:PSGALLERY_API_KEY -ErrorAction Stop -Force
-      #shell: pwsh
+      - name: Upload release asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url:  ${{ steps.create_release.outputs.upload_url }}
+        asset_path: release/${{ GH_PROJECTNAME }}_${{ VersionToPublish }}.zip
+        asset_name: ${{ GH_PROJECTNAME }}_${{ VersionToPublish }}.zip
+        asset_content_type: application/zip
+
+      - name: Publish to PowerShell Gallery
+        run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $env:PSGALLERY_API_KEY -ErrorAction "Stop" -Force
+        shell: pwsh
+
+      - name: Commit CHANGELOG.md and module manifest
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add CHANGELOG.md ${GH_PROJECTNAME}.psd1
+      
+      - name: Push
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
