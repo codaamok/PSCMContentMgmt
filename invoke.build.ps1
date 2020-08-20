@@ -22,7 +22,7 @@ task Clean {
 }
 
 task GetFunctionsToExport {
-    gci $BuildRoot
+    Get-ChildItem $BuildRoot
 
     $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\Public -Filter *.ps1)
 
