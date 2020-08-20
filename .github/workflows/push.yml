@@ -119,7 +119,7 @@ jobs:
       - name: Update module manifest with version and release notes
         run: |
           $ReleaseNotes = Get-Content -Path ./release/releasenotes.txt
-          Update-ModuleManifest -Path .\$env:GH_PROJECTNAME.psd1 -ReleaseNotes $ReleaseNotes -ModuleVersion $env:VersionToPublish -ErrorAction "Stop"
+          Update-ModuleManifest -Path .\$env:GH_PROJECTNAME\$env:GH_PROJECTNAME.psd1 -ReleaseNotes $ReleaseNotes -ModuleVersion $env:VersionToPublish -ErrorAction "Stop"
         shell: pwsh
 
       - name: Update change log
@@ -132,7 +132,7 @@ jobs:
 
           Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
 
-      - name: Initiate build
+      - name: Build
         run: Invoke-Build
         shell: pwsh
 
@@ -174,7 +174,7 @@ jobs:
           git config --global user.name "GitHub Action"
           git add CHANGELOG.md ${GH_PROJECTNAME}.psd1
       
-      - name: Push
+      - name: Push commit
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
