@@ -16,6 +16,7 @@ jobs:
   get-ver-and-releasenotes:
     name: Determine next version number and gather release notes
     runs-on: windows-latest
+    if: "contains(github.event.head_commit.message, ':shipit:')"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2.3.1
