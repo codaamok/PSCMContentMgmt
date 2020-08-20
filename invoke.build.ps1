@@ -1,4 +1,3 @@
-#Requires -Module ChangelogManagmeent
 [CmdletBinding()]
 param (
     [Parameter()]

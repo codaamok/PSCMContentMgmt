@@ -7,7 +7,7 @@ on:
 
 jobs:
   get-ver-and-releasenotes:
-    name: Determine next version number and gather release notes
+    name: main
     runs-on: windows-latest
     if: "contains(github.event.head_commit.message, ':shipit:')"
     steps:
@@ -131,9 +131,7 @@ jobs:
           Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
 
       - name: Build
-        run: |
-          Import-Module -Name ChangelogManagement -ErrorAction "Stop"
-          Invoke-Build -Version $env:VersionToPublish -ReleaseNotes (Get-Content -Path ./release/releasenotes.txt)
+        run: Invoke-Build -Version $env:VersionToPublish -ReleaseNotes (Get-Content -Path ./release/releasenotes.txt)
         shell: pwsh
 
       - name: Archive build
