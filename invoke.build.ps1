@@ -22,6 +22,8 @@ task Clean {
 }
 
 task GetFunctionsToExport {
+    gci $BuildRoot
+
     $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\Public -Filter *.ps1)
 
     $Script:FunctionsToExport = foreach ($File in $Files) {
