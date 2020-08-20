@@ -1,4 +1,4 @@
-name: "Publish new version to PowerShell Gallery when something is pushed to the master branch"
+name: "Publish"
 
 on: 
   push:
@@ -156,8 +156,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ VersionToPublish }}
-          release_name: ${{ GH_PROJECTNAME }} ${{ VersionToPublish }}
+          tag_name: ${{ env.VersionToPublish }}
+          release_name: ${{ env.GH_PROJECTNAME }} ${{ env.VersionToPublish }}
           body_path: release/releasenotes.txt
           draft: false
           prelease: false
@@ -166,11 +166,11 @@ jobs:
         id: upload_release_asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.secrets.GITHUB_TOKEN }}
         with:
           upload_url:  ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release/${{ GH_PROJECTNAME }}_${{ VersionToPublish }}.zip
-        asset_name: ${{ GH_PROJECTNAME }}_${{ VersionToPublish }}.zip
+        asset_path: release/${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
+        asset_name: ${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
         asset_content_type: application/zip
 
       - name: Publish to PowerShell Gallery
