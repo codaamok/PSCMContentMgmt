@@ -1,14 +1,6 @@
 name: "Publish"
 
 on: 
-  push:
-    paths-ignore:
-      - .github/**
-      - build/**
-      - '*.md'
-      - '*.todo'
-      - '**.psd1'
-
     branches:
       - master
 
