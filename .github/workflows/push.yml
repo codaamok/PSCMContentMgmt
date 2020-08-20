@@ -44,13 +44,13 @@ jobs:
           }
 
           if ($PSGallery) {
-            $r = $PSGallery | ConvertTo-Json
+            $r = $PSGallery | ConvertTo-Json -Compress
           }
           else {
             $r = [PSCustomObject]@{
               "Name"    = $env:GH_PROJECTNAME
               "Version" = "0.0"
-            } | ConvertTo-Json
+            } | ConvertTo-Json -Compress
           }
 
           Write-Output "::set-env name=PSGalleryModuleInfo::$r"
