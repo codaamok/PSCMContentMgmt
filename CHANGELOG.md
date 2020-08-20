@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-- Bundled license file with payload
+- Bundled license file and change log with payload
 - Implemented build process to streamline deployment
 - Added DeploymentId to Find-CMObject
 
