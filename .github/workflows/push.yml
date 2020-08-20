@@ -162,9 +162,9 @@ jobs:
           GITHUB_TOKEN: ${{ env.secrets.GITHUB_TOKEN }}
         with:
           upload_url:  ${{ steps.create_release.outputs.upload_url }}
-        asset_path: release/${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
-        asset_name: ${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
-        asset_content_type: application/zip
+          asset_path: release/${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
+          asset_name: ${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
+          asset_content_type: application/zip
 
       - name: Publish to PowerShell Gallery
         run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $env:PSGALLERY_API_KEY -ErrorAction "Stop" -Force
