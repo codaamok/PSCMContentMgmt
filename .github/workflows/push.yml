@@ -80,13 +80,11 @@ jobs:
           }
 
           Set-Content -Path ./release/releasenotes.txt -Value $ReleaseNotes -ErrorAction "Stop"
-
-          Write-Output ("::set-env name=ChangeLog::{0}" -f ($ChangeLog | ConvertTo-Json -Depth 3))
         shell: pwsh
 
       - name: Determine next version number
         run: |
-          $ChangeLog           = $env:ChangeLog | ConvertFrom-Json
+          $ChangeLog = Get-ChangeLogData -Path .\CHANGELOG.md -ErrorAction "Stop"
           $PSGalleryModuleInfo = $env:PSGalleryModuleInfo | ConvertFrom-Json
 
           $Date = Get-Date -Format 'yyyyMMdd'
