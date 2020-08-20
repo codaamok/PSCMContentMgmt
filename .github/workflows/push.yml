@@ -113,12 +113,17 @@ jobs:
             throw "Can not determine next version number"
           }
 
+          Write-Output ("Version to publish: {0}" -f $VersionToPublish)
           Write-Output "::set-env name=VersionToPublish::$VersionToPublish"
         shell: pwsh
 
       - name: Update module manifest with version and release notes
         run: |
           $ReleaseNotes = Get-Content -Path ./release/releasenotes.txt
+
+          Write-Output "Release notes:"
+          Write-Output $ReleaseNotes
+
           Update-ModuleManifest -Path .\$env:GH_PROJECTNAME\$env:GH_PROJECTNAME.psd1 -ReleaseNotes $ReleaseNotes -ModuleVersion $env:VersionToPublish -ErrorAction "Stop"
         shell: pwsh
 
