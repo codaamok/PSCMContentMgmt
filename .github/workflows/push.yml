@@ -141,6 +141,12 @@ jobs:
           cd build/$GH_PROJECTNAME
           zip -r ${GITHUB_WORKSPACE}/release/${GH_PROJECTNAME}_${VersionToPublish}.zip .
 
+      - name: Publish to PowerShell Gallery
+        run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $env:KEY -ErrorAction "Stop" -Force
+        shell: pwsh
+        env:
+          KEY: ${{ secrets.PSGALLERY_API_KEY }}
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -163,12 +169,6 @@ jobs:
           asset_path: release/${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
           asset_name: ${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
           asset_content_type: application/zip
-
-      - name: Publish to PowerShell Gallery
-        run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $KEY -ErrorAction "Stop" -Force
-        shell: pwsh
-        env:
-          KEY: ${{ secrets.PSGALLERY_API_KEY }}
 
       - name: Commit CHANGELOG.md and module manifest
         run: |
