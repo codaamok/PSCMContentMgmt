@@ -174,7 +174,7 @@ jobs:
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add CHANGELOG.md ${GH_PROJECTNAME}.psd1
+          git add CHANGELOG.md ${GH_PROJECTNAME}/${GH_PROJECTNAME}.psd1
       
       - name: Push commit
         uses: ad-m/github-push-action@master
