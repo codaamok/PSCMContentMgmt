@@ -39,7 +39,7 @@ jobs:
             $PSGallery = Find-Module -Name $env:GH_PROJECTNAME -ErrorAction "Stop"
           }
           catch {
-            if ($_.Exception.Message -notmatch "No match was for the specified search criteria and module name") {
+            if ($_.Exception.Message -notmatch "No match was for the specified search criteria") {
               throw $_
             }
           }
@@ -115,6 +115,33 @@ jobs:
             Write-Output ("Latest release version from change log: {0}" -f $ChangeLog.Released[0].Version)
             Write-Output ("Latest release version from PowerShell gallery: {0}" -f $PSGalleryModuleInfo.Version)
             throw "Can not determine next version number"
+          }
+
+          # Suss out unlisted packages
+          for ($i = 0; $i -lt 100; $i++) {
+            if ($i -eq 100) {
+              throw "You have 100 unlisted packages under the same build number? Sort your life out."
+            }
+
+            try {
+              $PSGalleryModuleInfo = Find-Module -Name $env:GH_PROJECTNAME -RequiredVersion $VersionToPublish -ErrorAction "Stop"
+              if (PSGalleryModuleInfo) {
+                $Revision         = if ($VersionToPublish.Revision -lt 0) { 1 } else { $VersionToPublish.Revision + 1 }
+                $VersionToPublish = [System.Version]::New(VersionToPublish.Major, $VersionToPublish.Minor, $VersionToPublish.Build, $Revision)
+              }
+              else {
+                throw "Unusual no object or exception caught from Find-Module"
+              }
+            }
+            catch {
+              if ($_.Exception.Message -match "No match was found for the specified search criteria") {
+                # Found next available version to use
+                break
+              }
+              else {
+                throw $_
+              }
+            }
           }
 
           Write-Output ("Version to publish: {0}" -f $VersionToPublish)
