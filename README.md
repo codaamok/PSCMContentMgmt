@@ -32,7 +32,7 @@ If you receive a warning along the lines of being unable to auto-populate variab
 
 If you receive either of these warnings, use `-SiteServer` and `-SiteCode` parameters which are available for all functions or set `$CMSiteServer` and `$CMSiteCode` in your session.
 
-The registry key it attempts to read for your site server's FQDN is `"HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection"` which is used by the Configuration Manager console.
+The registry key it attempts to read for your site server's FQDN is `HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection` which is used by the Configuration Manager console.
 
 ## Examples
 
