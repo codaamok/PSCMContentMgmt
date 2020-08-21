@@ -165,8 +165,10 @@ jobs:
           asset_content_type: application/zip
 
       - name: Publish to PowerShell Gallery
-        run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $env:PSGALLERY_API_KEY -ErrorAction "Stop" -Force
+        run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $KEY -ErrorAction "Stop" -Force
         shell: pwsh
+        env:
+          KEY: ${{ secrets.PSGALLERY_API_KEY }}
 
       - name: Commit CHANGELOG.md and module manifest
         run: |
