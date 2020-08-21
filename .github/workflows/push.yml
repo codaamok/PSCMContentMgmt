@@ -127,7 +127,7 @@ jobs:
               $PSGalleryModuleInfo = Find-Module -Name $env:GH_PROJECTNAME -RequiredVersion $VersionToPublish -ErrorAction "Stop"
               if (PSGalleryModuleInfo) {
                 $Revision         = if ($VersionToPublish.Revision -lt 0) { 1 } else { $VersionToPublish.Revision + 1 }
-                $VersionToPublish = [System.Version]::New(VersionToPublish.Major, $VersionToPublish.Minor, $VersionToPublish.Build, $Revision)
+                $VersionToPublish = [System.Version]::New($VersionToPublish.Major, $VersionToPublish.Minor, $VersionToPublish.Build, $Revision)
               }
               else {
                 throw "Unusual no object or exception caught from Find-Module"
