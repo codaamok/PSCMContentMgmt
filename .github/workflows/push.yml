@@ -150,10 +150,14 @@ jobs:
 
       - name: Update change log
         run: |
+          $FirstRelease  = "https://github.com/{0}/{1}/tree/v{CUR}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
+          $NormalRelease = "https://github.com/{0}/{1}/compare/v{PREV}..v{CUR}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
+          $Unreleased    = "https://github.com/{0}/{1}/compare/v{CUR}..HEAD" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
+
           $LinkPattern   = @{
-            FirstRelease  = "https://github.com/{0}/{1}/tree/v{CUR}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
-            NormalRelease = "https://github.com/{0}/{1}/compare/v{PREV}..v{CUR}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
-            Unreleased    = "https://github.com/{0}/{1}/compare/v{CUR}..HEAD" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
+            FirstRelease  = $FirstRelease
+            NormalRelease = $NormalRelease
+            Unreleased    = $Unreleased
           }
 
           Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
