@@ -1,8 +1,8 @@
 [CmdletBinding()]
 param (
-    [Parameter()]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [String]$ModuleName = ([Regex]::Match((Get-Content -Path $BuildRoot\.git\config -ErrorAction Stop), "url = https://github\.com/.+/(.+)\.git")).Groups[1].Value,
+    [String]$ModuleName,
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -22,8 +22,6 @@ task Clean {
 }
 
 task GetFunctionsToExport {
-    Get-ChildItem $BuildRoot
-
     $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\Public -Filter *.ps1)
 
     $Script:FunctionsToExport = foreach ($File in $Files) {

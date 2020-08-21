@@ -131,7 +131,7 @@ jobs:
           Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
 
       - name: Build
-        run: Invoke-Build -Version $env:VersionToPublish -ReleaseNotes (Get-Content -Path ./release/releasenotes.txt)
+        run: Invoke-Build -ModuleName $env:GH_PROJECTNAME -Version $env:VersionToPublish -ReleaseNotes (Get-Content -Path ./release/releasenotes.txt)
         shell: pwsh
 
       - name: Archive build
