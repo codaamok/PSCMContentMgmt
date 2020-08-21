@@ -14,7 +14,7 @@ param (
 )
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CopyChangeLog, CreateProcessScript, UpdateModuleManifest, TestManifest
+task . Clean, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CopyChangeLog, CreateProcessScript, UpdateModuleManifest
 
 # Synopsis: Cleans the build directory (except .gitkeep)
 task Clean {
@@ -102,7 +102,7 @@ task CopyChangeLog {
     Copy-Item -Path $BuildRoot\CHANGELOG.md -Destination $BuildRoot\build\$Script:ModuleName
 }
 
-# Synopsis: Copy and update the manifest
+# Synopsis: Copy and update the manifest in build directory. If successfully, replace manifest in the module directory
 task UpdateModuleManifest {
     $Script:ManifestFile = Copy-Item -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1 -Destination $BuildRoot\build\$Script:ModuleName -PassThru
     
@@ -128,11 +128,11 @@ task UpdateModuleManifest {
     }
     
     Update-ModuleManifest @UpdateModuleManifestSplat
-}
 
-# Synopsis: Test manifest
-task TestManifest {
     # Arguably a moot point as Update-MooduleManifest obviously does some testing to ensure a valid manifest is there first before updating it
     # However with the regex replace for ScriptsToProcess, I want to be sure
     $null = Test-ModuleManifest -Path $Script:ManifestFile
+
+    # Replace the manifest in the module directory
+    Copy-Item -Path $Script:ManifestFile -Destination $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1 -Force
 }
