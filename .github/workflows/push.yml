@@ -31,6 +31,7 @@ jobs:
             "InvokeBuild"
           )
           Install-Module -Name $Modules -Scope "CurrentUser" -Force -ErrorAction "Stop"
+        shell: pwsh
 
       - name: Get module's current version on PSGallery, default to 0 if not found
         run: |
