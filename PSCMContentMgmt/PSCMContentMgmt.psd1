@@ -12,7 +12,7 @@
 RootModule = 'PSCMContentMgmt.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.3.20200821.3'
+ModuleVersion = '1.3.20200821.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
