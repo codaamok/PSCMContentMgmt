@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  get-ver-and-releasenotes:
+  job-main:
     name: main
     runs-on: ubuntu-latest
     if: "contains(github.event.head_commit.message, ':shipit:')"
@@ -151,9 +151,9 @@ jobs:
       - name: Update change log
         run: |
           $LinkPattern   = @{
-            FirstRelease  = "https://github.com/testuser/testrepo/tree/v{CUR}"
-            NormalRelease = "https://github.com/testuser/testrepo/compare/v{PREV}..v{CUR}"
-            Unreleased    = "https://github.com/testuser/testrepo/compare/v{CUR}..HEAD"
+            FirstRelease  = "https://github.com/{0}/{1}/tree/v{CUR}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
+            NormalRelease = "https://github.com/{0}/{1}/compare/v{PREV}..v{CUR}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
+            Unreleased    = "https://github.com/{0}/{1}/compare/v{CUR}..HEAD" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
           }
 
           Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
