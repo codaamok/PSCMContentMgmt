@@ -219,7 +219,7 @@ function Import-DPContent {
                     $result = @{ 
                         PSTypeName = "PSCMContentMgmtImport"
                         ObjectID   = $ObjectID
-                        ObjectType = [SMS_DPContentInfo]$ObjectType
+                        ObjectType = ([SMS_DPContentInfo]$ObjectType).ToString()
                         Message    = $null
                     }
 

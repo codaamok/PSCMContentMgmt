@@ -118,8 +118,13 @@ function Get-DPDistributionStatus {
         Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
             [PSCustomObject]@{
                 PSTypeName        = "PSCMContentMgmt"
-                ObjectID          = $_.PackageID
-                ObjectType        = [SMS_PackageStatusDistPointsSummarizer_PackageType]$_.PackageType
+                ObjectID          = $(if ($_.PackageType -eq [SMS_PackageStatusDistPointsSummarizer_PackageType]"Application") { 
+                    ConvertTo-PackageIDCIID -PackageID $_.PackageID -SiteServer $SiteServer -SiteCode $SiteCode
+                }
+                else {
+                    $_.PackageID
+                })
+                ObjectType        = ([SMS_PackageStatusDistPointsSummarizer_PackageType]$_.PackageType).ToString()
                 State             = [SMS_PackageStatusDistPointsSummarizer_State]$_.State
                 SourceVersion     = $_.SourceVersion
                 DistributionPoint = $DistributionPoint

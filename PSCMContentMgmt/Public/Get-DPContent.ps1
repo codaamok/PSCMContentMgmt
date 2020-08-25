@@ -116,7 +116,7 @@ function Get-DPContent {
                 PSTypeName        = "PSCMContentMgmt"
                 ObjectName        = $_.Name
                 Description       = $_.Description
-                ObjectType        = [SMS_DPContentInfo]$_.ObjectType
+                ObjectType        = ([SMS_DPContentInfo]$_.ObjectType).ToString()
                 ObjectID          = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
                     ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
                 }

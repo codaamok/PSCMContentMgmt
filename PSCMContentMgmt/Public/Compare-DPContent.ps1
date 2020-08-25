@@ -77,7 +77,7 @@ function Compare-DPContent {
                     PSTypeName        = "PSCMContentMgmt"
                     ObjectName        = $_.ObjectName
                     Description       = $_.Description
-                    ObjectType        = [SMS_DPContentInfo]$_.ObjectType
+                    ObjectType        = ([SMS_DPContentInfo]$_.ObjectType).ToString()
                     ObjectID          = $_.ObjectID
                     SourceSize        = $_.SourceSize
                     DistributionPoint = $_.DistributionPoint

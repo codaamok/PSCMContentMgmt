@@ -166,7 +166,7 @@ function Find-CMOBject {
                         $result = Get-Ciminstance -Query $Query @GetCimInstanceSplat | Select-Object -Property @(
                             "Name"
                             "Description"
-                            @{Label="ObjectType";Expression={[SMS_DPContentInfo]$_.PackageType}}
+                            @{Label="ObjectType";Expression={([SMS_DPContentInfo]$_.PackageType).ToString()}}
                             "PackageID"
                         )
 

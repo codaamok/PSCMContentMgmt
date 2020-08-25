@@ -138,7 +138,7 @@ function Start-DPContentDistribution {
                             $result = @{
                                 PSTypeName = "PSCMContentMgmtDistribute" 
                                 ObjectID   = $InputObject.ObjectID
-                                ObjectType = [SMS_DPContentInfo]$InputObject.ObjectType
+                                ObjectType = ([SMS_DPContentInfo]$InputObject.ObjectType).ToString()
                                 Message    = $null
                             }
 
