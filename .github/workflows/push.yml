@@ -21,9 +21,6 @@ jobs:
           Write-Output "::set-env name=GH_USERNAME::$Username"
         shell: pwsh
 
-      - name: Create release directory
-        run: mkdir release
-
       - name: Install dependent modules
         run: |
           $Modules = @(
@@ -33,140 +30,16 @@ jobs:
           Install-Module -Name $Modules -Scope "CurrentUser" -Force -ErrorAction "Stop"
         shell: pwsh
 
-      - name: Get module's current version on PSGallery, default to 0 if not found
-        run: |
-          try {
-            $PSGallery = Find-Module -Name $env:GH_PROJECTNAME -ErrorAction "Stop"
-          }
-          catch {
-            if ($_.Exception.Message -notmatch "No match was for the specified search criteria") {
-              throw $_
-            }
-          }
-
-          if ($PSGallery) {
-            $r = $PSGallery | ConvertTo-Json -Compress
-          }
-          else {
-            $r = [PSCustomObject]@{
-              "Name"    = $env:GH_PROJECTNAME
-              "Version" = "0.0"
-            } | ConvertTo-Json -Compress
-          }
-
-          Write-Output "::set-env name=PSGalleryModuleInfo::$r"
-        shell: pwsh
-
-      - name: Read change log for next version and release notes
-        run: |
-          $ChangeLog = Get-ChangeLogData -Path .\CHANGELOG.md -ErrorAction "Stop"
-          $EmptyUnreleasedChangeLog = $true
-
-          $ReleaseNotes = foreach ($Property in $ChangeLog.Unreleased.Data.PSObject.Properties.Name) {
-            $Data = $ChangeLog.Unreleased.Data.$Property
-
-            if ($Data) {
-              $EmptyUnreleasedChangeLog = $false
-
-              Write-Output $Property
-
-              foreach ($item in $Data) {
-                Write-Output ("- {0}" -f $item)
-              }
-            }
-          }
-
-          if ($EmptyUnreleasedChangeLog -eq $true -Or $ReleaseNotes.Count -eq 0) {
-            throw "Can not deploy with empty change log"
-          }
-
-          Write-Output "Release notes:"
-          Write-Output $ReleaseNotes
-
-          Set-Content -Path ./release/releasenotes.txt -Value $ReleaseNotes -ErrorAction "Stop"
-        shell: pwsh
-
-      - name: Determine next version number
-        run: |
-          $ChangeLog = Get-ChangeLogData -Path .\CHANGELOG.md -ErrorAction "Stop"
-          $PSGalleryModuleInfo = $env:PSGalleryModuleInfo | ConvertFrom-Json
-
-          $Date = Get-Date -Format 'yyyyMMdd'
-
-          # If the last released version in the change log and latest version available in the PowerShell gallery don't match, throw an exception - get them level!
-          if ($null -ne $ChangeLog.Released[0].Version -And $ChangeLog.Released[0].Version -ne $PSGalleryModuleInfo.Version) {
-            throw "The latest released version in the changelog does not match the latest released version in the PowerShell gallery"
-          }
-          # If module isn't yet published in the PowerShell gallery, and there's no Released section in the change log, set initial version
-          elseif ($PSGalleryModuleInfo.Version -eq "0.0" -And $ChangeLog.Released.Count -eq 0) {
-            $VersionToPublish = [System.Version]::New(1, 0, $Date)
-          }
-          # If module isn't yet published in the PowerShell gallery, and there is a Released section in the change log, update version
-          elseif ($PSGalleryModuleInfo.Version -eq "0.0" -And $ChangeLog.Released.Count -ge 1) {
-            $CurrentVersion   = [System.Version]$ChangeLog.Released[0].Version
-            $VersionToPublish = [System.Version]::New($CurrentVersion.Major, $CurrentVersion.Minor + 1, $Date)
-          }
-          # If the last Released verison in the change log and currently latest verison in the PowerShell gallery are in harmony, update version
-          elseif ($ChangeLog.Released[0].Version -eq $PSGalleryModuleInfo.Version) {
-            $CurrentVersion   = [System.Version]$PSGalleryModuleInfo.Version
-            $VersionToPublish = [System.Version]::New($CurrentVersion.Major, $CurrentVersion.Minor + 1, $Date)
-          }
-          else {
-            Write-Output ("Latest release version from change log: {0}" -f $ChangeLog.Released[0].Version)
-            Write-Output ("Latest release version from PowerShell gallery: {0}" -f $PSGalleryModuleInfo.Version)
-            throw "Can not determine next version number"
-          }
-
-          # Suss out unlisted packages
-          for ($i = 0; $i -lt 100; $i++) {
-            if ($i -eq 100) {
-              throw "You have 100 unlisted packages under the same build number? Sort your life out."
-            }
-
-            try {
-              $PSGalleryModuleInfo = Find-Module -Name $env:GH_PROJECTNAME -RequiredVersion $VersionToPublish -ErrorAction "Stop"
-              if ($PSGalleryModuleInfo) {
-                $Revision         = if ($VersionToPublish.Revision -lt 0) { 1 } else { $VersionToPublish.Revision + 1 }
-                $VersionToPublish = [System.Version]::New($VersionToPublish.Major, $VersionToPublish.Minor, $VersionToPublish.Build, $Revision)
-              }
-              else {
-                throw "Unusual no object or exception caught from Find-Module"
-              }
-            }
-            catch {
-              if ($_.Exception.Message -match "No match was found for the specified search criteria") {
-                # Found next available version to use
-                break
-              }
-              else {
-                throw $_
-              }
-            }
-          }
-
-          Write-Output ("Version to publish: {0}" -f $VersionToPublish)
-          Write-Output "::set-env name=VersionToPublish::$VersionToPublish"
-        shell: pwsh
-
-      - name: Update change log
-        run: |
-          $LinkPattern   = @{
-            FirstRelease  = "https://github.com/{0}/{1}/tree/{{CUR}}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
-            NormalRelease = "https://github.com/{0}/{1}/compare/{{PREV}}..{{CUR}}" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
-            Unreleased    = "https://github.com/{0}/{1}/compare/{{CUR}}..HEAD" -f $env:GH_USERNAME, $env:GH_PROJECTNAME
-          }
-
-          Update-Changelog -Path .\CHANGELOG.md -ReleaseVersion $env:VersionToPublish -LinkMode Automatic -LinkPattern $LinkPattern -ErrorAction "Stop"
-        shell: pwsh
-
       - name: Build
-        run: Invoke-Build -ModuleName $env:GH_PROJECTNAME -Version $env:VersionToPublish -ReleaseNotes (Get-Content -Path ./release/releasenotes.txt)
-        shell: pwsh
-
-      - name: Archive build
         run: |
-          cd build/$GH_PROJECTNAME
-          zip -r ${GITHUB_WORKSPACE}/release/${GH_PROJECTNAME}_${VersionToPublish}.zip .
+          $Modules = @(
+            "ChangelogManagement"
+            "InvokeBuild"
+          )
+          Import-Module -Name $Modules -ErrorAction "Stop"
+
+          Invoke-Build -ModuleName $env:GH_PROJECTNAME -Author $env:GH_USERNAME -NewRelease
+        shell: pwsh
 
       - name: Publish to PowerShell Gallery
         run: Publish-Module -Path .\build\$env:GH_PROJECTNAME\ -NuGetApiKey $env:KEY -ErrorAction "Stop" -Force
@@ -180,8 +53,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VersionToPublish }}
-          release_name: ${{ env.GH_PROJECTNAME }} ${{ env.VersionToPublish }}
+          tag_name: ${{ env.VersionToBuild }}
+          release_name: Release ${{ env.VersionToBuild }}
           body_path: release/releasenotes.txt
           draft: false
           prelease: false
@@ -193,16 +66,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url:  ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
-          asset_name: ${{ env.GH_PROJECTNAME }}_${{ env.VersionToPublish }}.zip
+          asset_path: release/${{ env.GH_PROJECTNAME }}_${{ env.VersionToBuild }}.zip
+          asset_name: ${{ env.GH_PROJECTNAME }}_${{ env.VersionToBuild }}.zip
           asset_content_type: application/zip
+
+      - name: Copy CHANGELOG.md and module manifest to repository root directory
+        run: |
+          Copy-Item -Path (".\build\{0}\CHANGELOG.md" -f $env:GH_PROJECTNAME) -Destination . -Force
+          Copy-Item -Path (".\build\{0}\{0}.psd1" -f $env:GH_PROJECTNAME) -Destination .\$env:GH_PROJECTNAME -Force
+        shell: pwsh
 
       - name: Commit CHANGELOG.md and module manifest
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git add CHANGELOG.md ${GH_PROJECTNAME}/${GH_PROJECTNAME}.psd1
-          git commit -m "Released ${VersionToPublish}: updated change log and manifest"
+          git commit -m "Released ${VersionToBuild}: updated change log and manifest"
       
       - name: Push commit
         uses: ad-m/github-push-action@master

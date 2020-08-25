@@ -1,1 +1,3 @@
-
+☐ Create redistribution function
+☐ Create get all DPs function
+☐ Fix Get-DPDistributionStatus application objects returning PackageID instead oF CI_ID
