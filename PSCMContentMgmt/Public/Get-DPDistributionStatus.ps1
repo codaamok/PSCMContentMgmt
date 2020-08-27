@@ -3,7 +3,7 @@ function Get-DPDistributionStatus {
     .SYNOPSIS
         Retrieve the content distribution status of all objects for a distribution point.
     .PARAMETER DistributionPoint
-        Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of distribution point(s) (as it appears in ConfigMgr, usually FQDN) you want to query.
     .PARAMETER Distributed
         Filter on objects in distributed state
     .PARAMETER DistributionPending
@@ -36,12 +36,17 @@ function Get-DPDistributionStatus {
         PS C:\> Get-DPDistributionStatus -DistributionPoint "dp1.contoso.com"
 
         Gets the content distribution status for all objects on "dp1.contoso.com".
+    .EXAMPLE
+        PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
+
+        Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
+
     #>
     [CmdletBinding()]
     param (
-        [ParameteR(Mandatory)]
+        [ParameteR(Mandatory, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
-        [String]$DistributionPoint,
+        [String[]]$DistributionPoint,
 
         [Parameter()]
         [Switch]$Distributed,
@@ -87,47 +92,59 @@ function Get-DPDistributionStatus {
                 Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
         }
-
-        try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
-        }
-        catch {
-            $PSCmdlet.ThrowTerminatingError($_)
-        }
     }
     process {
-        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT PackageID,PackageType,State,SourceVersion FROM SMS_PackageStatusDistPointsSummarizer WHERE ServerNALPath like '%{0}%'" -f $DistributionPoint
-
-        $conditions = switch ($true) {
-            $Distributed            { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTED" }
-            $DistributionPending    { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_PENDING" }
-            $DistributionRetrying   { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_RETRYING" }
-            $DistributionFailed     { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_FAILED" }
-            $RemovalPending         { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_PENDING" }
-            $RemovalRetrying        { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_RETRYING" }
-            $RemovalFailed          { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_FAILED" }
-            $ContentUpdating        { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"CONTENT_UPDATING" }
-            $ContentMonitoring      { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"CONTENT_MONITORING" }
-        }
-
-        if ($conditions) {
-            $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
-        }
-
-        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
-            [PSCustomObject]@{
-                PSTypeName        = "PSCMContentMgmt"
-                ObjectID          = $(if ($_.PackageType -eq [SMS_PackageStatusDistPointsSummarizer_PackageType]"Application") { 
-                    ConvertTo-PackageIDCIID -PackageID $_.PackageID -SiteServer $SiteServer -SiteCode $SiteCode
+        foreach ($TargetDP in $DistributionPoint) {
+            switch ($true) {
+                ($LastDP -ne $TargetDP) {
+                    try {
+                        Resolve-DP -Name $TargetDP -SiteServer $SiteServer -SiteCode $SiteCode
+                    }
+                    catch {
+                        Write-Error -ErrorRecord $_
+                        return
+                    }
+                    
+                    $LastDP = $TargetDP
                 }
-                else {
-                    $_.PackageID
-                })
-                ObjectType        = ([SMS_PackageStatusDistPointsSummarizer_PackageType]$_.PackageType).ToString()
-                State             = [SMS_PackageStatusDistPointsSummarizer_State]$_.State
-                SourceVersion     = $_.SourceVersion
-                DistributionPoint = $DistributionPoint
+                default {
+                    $LastDP = $TargetDP
+                }
+            }
+
+            $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+            $Query = "SELECT PackageID,PackageType,State,SourceVersion FROM SMS_PackageStatusDistPointsSummarizer WHERE ServerNALPath like '%{0}%'" -f $TargetDP
+    
+            $conditions = switch ($true) {
+                $Distributed          { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTED" }
+                $DistributionPending  { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_PENDING" }
+                $DistributionRetrying { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_RETRYING" }
+                $DistributionFailed   { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"DISTRIBUTION_FAILED" }
+                $RemovalPending       { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_PENDING" }
+                $RemovalRetrying      { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_RETRYING" }
+                $RemovalFailed        { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"REMOVAL_FAILED" }
+                $ContentUpdating      { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"CONTENT_UPDATING" }
+                $ContentMonitoring    { "State = '{0}'" -f [Int][SMS_PackageStatusDistPointsSummarizer_State]"CONTENT_MONITORING" }
+            }
+    
+            if ($conditions) {
+                $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
+            }
+    
+            Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
+                [PSCustomObject]@{
+                    PSTypeName        = "PSCMContentMgmt"
+                    ObjectID          = $(if ($_.PackageType -eq [SMS_PackageStatusDistPointsSummarizer_PackageType]"Application") { 
+                        ConvertTo-PackageIDCIID -PackageID $_.PackageID -SiteServer $SiteServer -SiteCode $SiteCode
+                    }
+                    else {
+                        $_.PackageID
+                    })
+                    ObjectType        = ([SMS_PackageStatusDistPointsSummarizer_PackageType]$_.PackageType).ToString()
+                    State             = [SMS_PackageStatusDistPointsSummarizer_State]$_.State
+                    SourceVersion     = $_.SourceVersion
+                    DistributionPoint = $TargetDP
+                }
             }
         }
     }
