@@ -1,0 +1,5 @@
+☐ Create redistribution function
+✔ Create get all DPs function @done (27/08/2020, 20:52:32)
+☐ Create get all DP groups functions
+✔ Fix Get-DPDistributionStatus application objects returning PackageID instead oF CI_ID @done (25/08/2020, 19:32:24)
+☐ Some functions/cmdlet calls are forced -ErrorAction "Stop" where I might expect users to make use of their own error action preference
