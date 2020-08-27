@@ -8,8 +8,10 @@ PowerShell module used for managing Microsoft Endpoint Manager Configuration Man
 - Compare-DPContent
 - Compare-DPGroupContent
 - Export-DPContent
+- Get-DP
 - Get-DPContent
 - Get-DPDistributionStatus
+- Get-DPGroup
 - Get-DPGroupContent
 - Import-DPContent
 - Invoke-DPContentLibraryCleanup
@@ -17,6 +19,7 @@ PowerShell module used for managing Microsoft Endpoint Manager Configuration Man
 - Remove-DPGroupContent
 - Set-DPAllowPrestagedContent
 - Start-DPContentDistribution
+- Start-DPContentRedistribution
 - Start-DPGroupContentDistribution
 
 ## Getting started
@@ -35,6 +38,30 @@ If you receive either of these warnings, use `-SiteServer` and `-SiteCode` param
 The registry key it attempts to read for your site server's FQDN is `HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection` which is used by the Configuration Manager console.
 
 ## Examples
+
+```powershell
+PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
+```
+
+Return distribution points which have a ServerName property starting with `SERVERA` or `SERVERB`, but excluding any that match `CMG` anywhere in its name.
+
+___
+
+```powershell
+PS C:\> PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
+```
+
+Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
+
+___
+
+```powershell
+PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Start-DPContentRedistribution
+```
+
+Return all distribution points, their associated failed distribution tasks and initiate redistribution for them.
+
+___
 
 ```powershell
 PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com"
