@@ -132,7 +132,7 @@ function Export-DPContent {
                     }
                 }
 
-                $File = "{0}_{1}.pkgx" -f [int]$Object.ObjectType, $Object.ObjectID
+                $File = "{0}_{1}.pkgx" -f [int][SMS_DPContentInfo]$Object.ObjectType, $Object.ObjectID
                 $Path = Join-Path -Path $Folder -ChildPath $File
         
                 $result = @{ 
