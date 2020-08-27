@@ -1,13 +1,13 @@
-function Get-DP {
+function Get-DPGroup {
     <#
     .SYNOPSIS
-        Find distribution point(s) by name. If nothing is returned, no match was found. % wildcard accepted.
+        Find distribution point group(s) by name. If nothing is returned, no match was found. % wildcard accepted.
     .DESCRIPTION
-        Find distribution point(s) by name. If nothing is returned, no match was found. % wildcard accepted.
+        Find distribution point group(s) by name. If nothing is returned, no match was found. % wildcard accepted.
     .PARAMETER Name
-        Name of distribution point(s) you want to search for. This does not have to be an exact match of how it appears in Configuration Manager (usually FQDN), you can leverage the % wildcard character.
+        Name of distribution point group(s) you want to search for. This does not have to be an exact match of how it appears in Configuration Manager, you can leverage the % wildcard character.
     .PARAMETER Exclude
-        Name of distribution point(s) you want to exclude from the search. This does not have to be an exact match of how it appears in Configuration Manager (usually FQDN), you can leverage the % wildcard character.
+        Name of distribution point group(s) you want to exclude from the search. This does not have to be an exact match of how it appears in Configuration Manager, you can leverage the % wildcard character.
     .PARAMETER SiteServer
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
         
@@ -21,15 +21,12 @@ function Get-DP {
     .EXAMPLE
         PS C:\> Get-DP
 
-        Return all disttribution points within the site.
     .EXAMPLE
         PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
 
-        Return distribution points which have a ServerName property starting with "SERVERA" or "SERVERB", but excluding any that match "CMG" anywhere in its name.
     .EXAMPLE
         PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property Name
 
-        Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
     #>
     [CmdletBinding()]
     param (
@@ -61,19 +58,19 @@ function Get-DP {
     }
     process {
         $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT * FROM SMS_DistributionPointInfo"
+        $Query = "SELECT * FROM SMS_DistributionPointGroup"
 
         if ($PSBoundParameters.ContainsKey("Name")) {
-            $DistributionPoints = foreach ($TargetDP in $Name) {
-                "ServerName LIKE '{0}'" -f $TargetDP
+            $DPGroups = foreach ($TargetDPGroup in $Name) {
+                "Name LIKE '{0}'" -f $TargetDPGroup
             }
 
-            $Query = "{0} WHERE ( {1} )" -f $Query, [String]::Join(" OR ", $DistributionPoints)
+            $Query = "{0} WHERE ( {1} )" -f $Query, [String]::Join(" OR ", $DPGroups)
         }
 
         if ($PSBoundParameters.ContainsKey("Exclude")) { 
             $Exclusions = foreach ($Exclusion in $Exclude) {
-                "(NOT ServerName LIKE '{0}')" -f $Exclusion
+                "(NOT Name LIKE '{0}')" -f $Exclusion
             }
 
             if ($Query -match "where") {
