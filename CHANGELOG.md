@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Added Get-DP function
+- Added Get-DPGroup function
+- Added Start-DPContentRedistribution function
+
+### Changed
+- Get-DPDistributionPointStatus now accepts value from pipeline or an array of distribution points
+
 ### Fixed
 - Unable to pipe result of some functions to other functions due to ObjectType property often being an enum rather than string
 
