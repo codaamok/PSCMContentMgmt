@@ -8,6 +8,7 @@
                 <TypeName>PSCMContentMgmtPrestage</TypeName>
                 <TypeName>PSCMContentMgmtRemove</TypeName>
                 <TypeName>PSCMContentMgmtDistribute</TypeName>
+                <TypeName>PSCMContentMgmtRedistribute</TypeName>
             </ViewSelectedBy>
             <TableControl>
                 <TableHeaders>
