@@ -3,7 +3,7 @@ function Set-DPAllowPrestagedContent {
     .SYNOPSIS
         Configure the allow prestage content setting for a distribution point
     .PARAMETER DistributionPoint
-        Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to change the setting on.
+        Name of distribution point (as it appears in Configuration Manager, usually FQDN) you want to change the setting on.
     .PARAMETER State
         A boolean value, $true configures the distribution point to allow prestage contet whereas $false removes the config.
 

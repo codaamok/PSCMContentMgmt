@@ -117,7 +117,7 @@ function Get-DPGroupContent {
             $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
         }
     
-        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
+        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
             [PSCustomObject]@{
                 PSTypeName             = "PSCMContentMgmt"
                 ObjectName             = $_.Name

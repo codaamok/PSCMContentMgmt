@@ -3,9 +3,9 @@ function Compare-DPContent {
     .SYNOPSIS
         Returns a list of content objects missing from the given target server compared to the source server.
     .PARAMETER Source
-        Name of the referencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of the referencing distribution point (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER Target
-        Name of the differencing distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of the differencing distribution point (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER SiteServer
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
 

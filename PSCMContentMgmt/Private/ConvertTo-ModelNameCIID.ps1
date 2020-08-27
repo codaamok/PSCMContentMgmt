@@ -1,7 +1,7 @@
 function ConvertTo-ModelNameCIID {
     <#
     .SYNOPSIS
-        Get a ConfigMgr Application's CI_ID property from the given ModelName property
+        Get a Configuration Manager Application's CI_ID property from the given ModelName property
     #>
     [CmdletBinding()]
     param (

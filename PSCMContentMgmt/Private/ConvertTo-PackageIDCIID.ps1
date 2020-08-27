@@ -1,7 +1,7 @@
 function ConvertTo-PackageIDCIID {
     <#
     .SYNOPSIS
-        Get a ConfigMgr Application's CI_ID property from the given PackageID property
+        Get a Configuration Manager Application's CI_ID property from the given PackageID property
     #>
     [CmdletBinding()]
     param (

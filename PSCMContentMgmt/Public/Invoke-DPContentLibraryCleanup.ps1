@@ -9,7 +9,7 @@ function Invoke-DPContentLibraryCleanup {
 
         Worth noting that omitting the -Delete parameter is the equivilant of omitting the "/delete" parameter for the binary too. In other words, without -Delete it will just report on orphaned content and not delete it.
     .PARAMETER DistributionPoint
-        Name of the distribution point (as it appears in ConfigMgr, usually FQDN) you want to clean up.
+        Name of the distribution point (as it appears in Configuration Manager, usually FQDN) you want to clean up.
     .PARAMETER ContentLibraryCleanupExe
         Absolute path to ContentLibraryCleanup.exe.
 

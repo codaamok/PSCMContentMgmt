@@ -3,7 +3,7 @@ function Get-DPDistributionStatus {
     .SYNOPSIS
         Retrieve the content distribution status of all objects for a distribution point.
     .PARAMETER DistributionPoint
-        Name of distribution point(s) (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of distribution point(s) (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER Distributed
         Filter on objects in distributed state
     .PARAMETER DistributionPending

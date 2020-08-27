@@ -11,7 +11,7 @@ function Get-DPContent {
 
         Properties returned are: ObjectName, Description, ObjectType, ObjectID, SourceSize, DistributionPoint.
     .PARAMETER Name
-        Name of distribution point (as it appears in ConfigMgr, usually FQDN) you want to query.
+        Name of distribution point (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER Package
         Filter on packages
     .PARAMETER DriverPackage
@@ -111,7 +111,7 @@ function Get-DPContent {
             $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
         }
     
-        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" | ForEach-Object {
+        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
             [PSCustomObject]@{
                 PSTypeName        = "PSCMContentMgmt"
                 ObjectName        = $_.Name
