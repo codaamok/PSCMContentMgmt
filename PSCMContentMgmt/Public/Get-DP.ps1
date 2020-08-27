@@ -4,7 +4,7 @@ function Get-DP {
         Find distribution point(s) by name. If nothing is returned, no match was found. % wildcard accepted.
     .DESCRIPTION
         Find distribution point(s) by name. If nothing is returned, no match was found. % wildcard accepted.
-    .PARAMETER DistributionPoint
+    .PARAMETER Name
         Name of distribution point(s) you want to search for. This does not have to be an exact match of how it appears in Configuration Manager (usually FQDN), you can leverage the % wildcard character.
     .PARAMETER Exclude
         Name of distribution point(s) you want to exclude from the search. This does not have to be an exact match of how it appears in Configuration Manager (usually FQDN), you can leverage the % wildcard character.
@@ -23,11 +23,11 @@ function Get-DP {
 
         Return all disttribution points within the site.
     .EXAMPLE
-        PS C:\> Get-DP -DistributionPoint "SERVERA%", "SERVERB%" -Exclude "%CMG%"
+        PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
 
         Return distribution points which have a ServerName property starting with "SERVERA" or "SERVERB", but excluding any that match "CMG" anywhere in its name.
     .EXAMPLE
-        PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
+        PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property Name
 
         Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
     #>
@@ -35,7 +35,7 @@ function Get-DP {
     param (
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String[]]$DistributionPoint,
+        [String[]]$Name,
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -64,7 +64,7 @@ function Get-DP {
         $Query = "SELECT * FROM SMS_DistributionPointInfo"
 
         if ($PSBoundParameters.ContainsKey("DistributionPoint")) {
-            $DistributionPoints = foreach ($TargetDP in $DistributionPoint) {
+            $DistributionPoints = foreach ($TargetDP in $Name) {
                 "ServerName LIKE '{0}'" -f $TargetDP
             }
 
