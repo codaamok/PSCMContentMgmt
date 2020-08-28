@@ -10,7 +10,7 @@ function Get-DPContent {
         You can filter the content objects by cumulatively using the available switches, e.g. using -Package -DriverPackage will return packages and driver packages.
 
         Properties returned are: ObjectName, Description, ObjectType, ObjectID, SourceSize, DistributionPoint.
-    .PARAMETER Name
+    .PARAMETER DistributionPoint
         Name of distribution point (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER Package
         Filter on packages

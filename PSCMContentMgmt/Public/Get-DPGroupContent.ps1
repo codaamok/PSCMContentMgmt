@@ -10,7 +10,7 @@ function Get-DPGroupContent {
         You can filter the content objects by cumulatively using the available switches, e.g. using -Package -DriverPackage will return packages and driver packages.
 
         Properties returned are: ObjectName, Description, ObjectType, ObjectID, SourceSize, DistributionPoint.
-    .PARAMETER Name
+    .PARAMETER DistributionPointGroup
         Name of distribution point group you want to query.
     .PARAMETER Package
         Filter on packages
@@ -37,7 +37,7 @@ function Get-DPGroupContent {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Get-DPGroupContent -Name "Asia DPs" -Package -Application
+        PS C:\> Get-DPGroupContent -DistributionPointGroup "Asia DPs" -Package -Application
 
         Return all packages and applications found in the distribution point group "Asia DPs"
     #>
