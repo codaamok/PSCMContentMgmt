@@ -44,7 +44,8 @@ function Get-DPDistributionStatus {
     #>
     [CmdletBinding()]
     param (
-        [ParameteR(Mandatory, ValueFromPipeline)]
+        [Alias("Name", "ServerName")]
+        [ParameteR(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [String[]]$DistributionPoint,
 
