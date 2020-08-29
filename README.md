@@ -22,6 +22,8 @@ PowerShell module used for managing Microsoft Endpoint Manager Configuration Man
 - Start-DPContentRedistribution
 - Start-DPGroupContentDistribution
 
+Where any of the functions return an object with the property `ObjectID`, it will always return `PackageID` for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where the `CI_ID` is always retrieved. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
+
 ## Getting started
 
 Install and import:
@@ -48,7 +50,7 @@ Return distribution points which have a ServerName property starting with `SERVE
 ___
 
 ```powershell
-PS C:\> PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
+PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
 ```
 
 Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
@@ -61,6 +63,15 @@ PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Start-DPContentR
 
 Return all distribution points, their associated failed distribution tasks and initiate redistribution for them.
 
+___
+
+```powershell
+PS C:\> PS C:\> Get-DP -Name "London%" | Get-DPContent
+```
+
+Return all content objects found on distribution points where their ServerName starts with "London".
+
+_Note: the same is available for groups with Get-DPGroup and `Get-DPGroupContent`._
 ___
 
 ```powershell
