@@ -40,12 +40,17 @@ function Get-DPGroupContent {
         PS C:\> Get-DPGroupContent -DistributionPointGroup "Asia DPs" -Package -Application
 
         Return all packages and applications found in the distribution point group "Asia DPs"
+    .EXAMPLE
+        PS C:\> Get-DPGroup -Name "All DPs" | Get-DPGroupContent
+
+        Get all the content associated with the distribution point group "All DPs".
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
+        [Alias("Name")]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [String]$DistributionPointGroup,
+        [String[]]$DistributionPointGroup,
 
         [Parameter()]
         [Switch]$Package,
@@ -84,53 +89,65 @@ function Get-DPGroupContent {
             $SiteServer {
                 Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
-        }
-        
-        try {
-            Resolve-DPGroup -Name $DistributionPointGroup -SiteServer $SiteServer -SiteCode $SiteCode
-        }
-        catch {
-            $PSCmdlet.ThrowTerminatingError($_)
-        }        
+        }       
     }
     process {
-        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT * 
-        FROM SMS_DPGroupContentInfo 
-        WHERE SMS_DPGroupContentInfo.GroupID in (
-            SELECT SMS_DPGroupInfo.GroupID
-            FROM SMS_DPGroupInfo
-            WHERE Name = '{0}'
-        )" -f $DistributionPointGroup
-    
-        $conditions = switch ($true) {
-            $Package                    { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Package" }
-            $DriverPackage              { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DriverPackage" }
-            $DeploymentPackage          { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DeploymentPackage" }
-            $OperatingSystemImage       { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemImage" }
-            $OperatingSystemInstaller   { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemInstaller" }
-            $BootImage                  { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"BootImage" }
-            $Application                { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Application" }
-        }
-    
-        if ($conditions) { 
-            $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
-        }
-    
-        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
-            [PSCustomObject]@{
-                PSTypeName             = "PSCMContentMgmt"
-                ObjectName             = $_.Name
-                Description            = $_.Description
-                ObjectType             = ([SMS_DPContentInfo]$_.ObjectType).ToString()
-                ObjectID               = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
-                    ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
+        foreach ($TargetDPGroup in $DistributionPointGroup) {
+            switch ($true) {
+                ($LastDPGroup -ne $TargetDPGroup) {
+                    try {
+                        Resolve-DPGroup -Name $TargetDPGroup -SiteServer $SiteServer -SiteCode $SiteCode
+                    }
+                    catch {
+                        Write-Error -ErrorRecord $_
+                        return
+                    }
+
+                    $LastDPGroup = $TargetDPGroup
                 }
-                else {
-                    $_.ObjectID
-                })
-                SourceSize             = $_.SourceSize
-                DistributionPointGroup = $DistributionPointGroup
+                default {
+                    $LastDPGroup = $TargetDPGroup
+                }
+            }
+
+            $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+            $Query = "SELECT * 
+            FROM SMS_DPGroupContentInfo 
+            WHERE SMS_DPGroupContentInfo.GroupID in (
+                SELECT SMS_DPGroupInfo.GroupID
+                FROM SMS_DPGroupInfo
+                WHERE Name = '{0}'
+            )" -f $TargetDPGroup
+        
+            $conditions = switch ($true) {
+                $Package                    { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Package" }
+                $DriverPackage              { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DriverPackage" }
+                $DeploymentPackage          { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DeploymentPackage" }
+                $OperatingSystemImage       { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemImage" }
+                $OperatingSystemInstaller   { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemInstaller" }
+                $BootImage                  { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"BootImage" }
+                $Application                { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Application" }
+            }
+        
+            if ($conditions) { 
+                $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
+            }
+        
+            Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
+                [PSCustomObject]@{
+                    PSTypeName             = "PSCMContentMgmt"
+                    ObjectName             = $_.Name
+                    Description            = $_.Description
+                    ObjectType             = ([SMS_DPContentInfo]$_.ObjectType).ToString()
+                    ObjectID               = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
+                        ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
+                    }
+                    else {
+                        $_.ObjectID
+                    })
+                    SourceSize             = $_.SourceSize
+                    DistributionPointGroup = $TargetDPGroup
+                }
             }
         }
     }

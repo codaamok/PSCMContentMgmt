@@ -1,9 +1,9 @@
 function Get-DPContent {
     <#
     .SYNOPSIS
-        Get all content distributed to a given distribution point by querying SMS_DPContentInfo class.
+        Get all content distributed to a given distribution point.
     .DESCRIPTION
-        Get all content distributed to a given distribution point by querying SMS_DPContentInfo class.
+        Get all content distributed to a given distribution point.
 
         By default this function returns all content object types that match the given distribution point in the SMS_DPContentInfo class on the site server.
 
@@ -40,12 +40,17 @@ function Get-DPContent {
         PS C:\> Get-DPContent -Name dp.contoso.com -Package -Application
 
         Return all packages and applications found on dp.contoso.com.s
+    .EXAMPLE
+        PS C:\> Get-DP -Name "London%" | Get-DPContent
+
+        Return all content objects found on distribution points where their ServerName starts with "London".
     #>
     [CmdletBinding()]
-    param (
-        [Parameter(Mandatory)]
+    param(
+        [Alias("Name")]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
-        [String]$DistributionPoint,
+        [String[]]$DistributionPoint,
 
         [Parameter()]
         [Switch]$Package,
@@ -85,46 +90,58 @@ function Get-DPContent {
                 Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
             }
         }
-        
-        try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
-        }
-        catch {
-            $PSCmdlet.ThrowTerminatingError($_)
-        }
     }
     process {
-        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT * FROM SMS_DPContentInfo WHERE NALPath like '%{0}%'" -f $DistributionPoint
-    
-        $conditions = switch ($true) {
-            $Package                    { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Package" }
-            $DriverPackage              { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DriverPackage" }
-            $DeploymentPackage          { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DeploymentPackage" }
-            $OperatingSystemImage       { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemImage" }
-            $OperatingSystemInstaller   { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemInstaller" }
-            $BootImage                  { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"BootImage" }
-            $Application                { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Application" }
-        }
-    
-        if ($conditions) { 
-            $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
-        }
-    
-        Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
-            [PSCustomObject]@{
-                PSTypeName        = "PSCMContentMgmt"
-                ObjectName        = $_.Name
-                Description       = $_.Description
-                ObjectType        = ([SMS_DPContentInfo]$_.ObjectType).ToString()
-                ObjectID          = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
-                    ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
+        foreach ($TargetDP in $DistributionPoint) {
+            switch ($true) {
+                ($LastDP -ne $TargetDP) {
+                    try {
+                        Resolve-DP -Name $TargetDP -SiteServer $SiteServer -SiteCode $SiteCode
+                    }
+                    catch {
+                        Write-Error -ErrorRecord $_
+                        return
+                    }
+
+                    $LastDP = $TargetDP
                 }
-                else {
-                    $_.ObjectID
-                })
-                SourceSize        = $_.SourceSize
-                DistributionPoint = $DistributionPoint
+                default {
+                    $LastDP = $TargetDP
+                }
+            }
+
+            $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+            $Query = "SELECT * FROM SMS_DPContentInfo WHERE NALPath like '%{0}%'" -f $TargetDP
+        
+            $conditions = switch ($true) {
+                $Package                    { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Package" }
+                $DriverPackage              { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DriverPackage" }
+                $DeploymentPackage          { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"DeploymentPackage" }
+                $OperatingSystemImage       { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemImage" }
+                $OperatingSystemInstaller   { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"OperatingSystemInstaller" }
+                $BootImage                  { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"BootImage" }
+                $Application                { "ObjectType = '{0}'" -f [Int][SMS_DPContentInfo]"Application" }
+            }
+        
+            if ($conditions) { 
+                $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
+            }
+        
+            Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
+                [PSCustomObject]@{
+                    PSTypeName        = "PSCMContentMgmt"
+                    ObjectName        = $_.Name
+                    Description       = $_.Description
+                    ObjectType        = ([SMS_DPContentInfo]$_.ObjectType).ToString()
+                    ObjectID          = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
+                        ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
+                    }
+                    else {
+                        $_.ObjectID
+                    })
+                    SourceSize        = $_.SourceSize
+                    DistributionPoint = $TargetDP
+                }
             }
         }
     }
