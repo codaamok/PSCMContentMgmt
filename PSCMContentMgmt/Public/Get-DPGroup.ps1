@@ -19,14 +19,17 @@ function Get-DPGroup {
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
     .EXAMPLE
-        PS C:\> Get-DP
+        PS C:\> Get-DPGroup
 
+        Return all distribution point groups within the site.
     .EXAMPLE
-        PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
+        PS C:\> Get-DPGroup -Name "All%" -Exclude "London%"
 
+        Return all distribution point groups where their Name starts with "All" but exclude those where their name starts with "London".
     .EXAMPLE
-        PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property Name
+        PS C:\> Get-DPGroup -Name "All DPs" | Get-DPGroupContent
 
+        Get all the content associated with the distribution point group "All DPs".
     #>
     [CmdletBinding()]
     param (

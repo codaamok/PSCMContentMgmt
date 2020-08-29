@@ -30,6 +30,10 @@ function Get-DP {
         PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property Name
 
         Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
+    .EXAMPLE
+        PS C:\> Get-DP -Name "London%" | Get-DPContent
+
+        Return all content objects found on distribution points where their ServerName starts with "London".
     #>
     [CmdletBinding()]
     param (
