@@ -26,6 +26,7 @@ jobs:
           $Modules = @(
             "ChangelogManagement"
             "InvokeBuild"
+            "PlatyPS"
           )
           Install-Module -Name $Modules -Scope "CurrentUser" -Force -ErrorAction "Stop"
         shell: pwsh
@@ -35,6 +36,7 @@ jobs:
           $Modules = @(
             "ChangelogManagement"
             "InvokeBuild"
+            "PlatyPS"
           )
           Import-Module -Name $Modules -ErrorAction "Stop"
 
@@ -80,7 +82,7 @@ jobs:
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-          git add CHANGELOG.md ${GH_PROJECTNAME}/${GH_PROJECTNAME}.psd1
+          git add CHANGELOG.md ${GH_PROJECTNAME}/${GH_PROJECTNAME}.psd1 docs
           git commit -m "Released ${VersionToBuild}: updated change log and manifest"
       
       - name: Push commit

@@ -1,4 +1,4 @@
-#Requires -Module "ChangelogManagement"
+#Requires -Module "ChangelogManagement", "PlatyPS"
 [CmdletBinding()]
 param (
     [Parameter()]
@@ -14,7 +14,7 @@ param (
 )
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset
+task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset, UpdateDocs
 
 # Synopsis: Empty the contents of the build and release directories. If not exist, create them.
 task Clean {
@@ -294,4 +294,18 @@ task UpdateModuleManifest {
 task CreateReleaseAsset {
     $ReleaseAsset = "{0}_{1}.zip" -f $Script:ModuleName, $Script:VersionToBuild
     Compress-Archive -Path $BuildRoot\build\$Script:ModuleName\* -DestinationPath $BuildRoot\release\$ReleaseAsset -Force
+}
+
+# Synopsis: Update documentation (-NewRelease switch parameter)
+task UpdateDocs -If ($NewRelease.IsPresent) {
+    $Docs = Get-ChildItem -Path $BuildRoot\docs -Fitler "*.md"
+
+    Import-Module -Name $BuildRoot\build\$Script:ModuleName -ErrorAction "Stop"
+
+    if ($null -eq $Docs -Or $Docs.Count -eq 0) {
+        New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs
+    }
+    else {
+        Update-MarkdownHelpModule -Path $BuildRoot\docs
+    }
 }
