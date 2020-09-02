@@ -17,7 +17,7 @@ param (
 )
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyAboutHelp, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset, UpdateDocs
+task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyAboutHelp, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset
 
 # Synopsis: Empty the contents of the build and release directories. If not exist, create them.
 task Clean {
@@ -305,7 +305,7 @@ task CreateReleaseAsset {
 }
 
 # Synopsis: Update documentation (-NewRelease or -UpdateDocs switch parameter)
-task UpdateDocs -If ($NewRelease.IsPresent -Or $UpdateDocs.IsPresent) {
-    Import-Module -Name $BuildRoot\build\$Script:ModuleName -Force
-    New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs -Force
-}
+#task UpdateDocs -If ($NewRelease.IsPresent -Or $UpdateDocs.IsPresent) {
+#    Import-Module -Name $BuildRoot\build\$Script:ModuleName -Force
+#    New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs -Force
+#}
