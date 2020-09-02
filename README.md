@@ -29,7 +29,7 @@ Where any of the functions return an object with the property `ObjectID`, it wil
 Install and import:
 
 ```powershell
-PS C:\> Install-Module PSCMContentMgmt -Scope CurrentUSer
+PS C:\> Install-Module PSCMContentMgmt -Scope CurrentUser
 PS C:\> Import-Module PSCMContentMgmt
 ```
 
@@ -73,7 +73,7 @@ Return all distribution points, their associated failed distribution tasks and i
 ___
 
 ```powershell
-PS C:\> PS C:\> Get-DP -Name "London%" | Get-DPContent
+PS C:\> Get-DP -Name "London%" | Get-DPContent
 ```
 
 Return all content objects found on distribution points where their ServerName starts with "London".
