@@ -78,7 +78,7 @@ task GetReleaseNotes {
         if ($Data) {
             $EmptyChangeLog = $false
 
-            Write-Output $Property
+            Write-Output ("# {0}" -f $Property)
 
             foreach ($item in $Data) {
                 Write-Output ("- {0}" -f $item)
