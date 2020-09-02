@@ -12,7 +12,7 @@
 RootModule = 'PSCMContentMgmt.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.4.20200902.0'
+ModuleVersion = '1.4.20200902.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -113,14 +113,14 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'Added
+        ReleaseNotes = '# Added
 - Added Get-DP function
 - Added Get-DPGroup function
 - Added Start-DPContentRedistribution function
 - Added About help topics, run `Get-Help about_PSCMContentMgmt*`
-Changed
+# Changed
 - Get-DPDistributionStatus now accepts value from pipeline or an array of distribution points
-Fixed
+# Fixed
 - Unable to pipe result of some functions to other functions due to ObjectType property often being an enum rather than string'
 
         # Prerelease string of this module
