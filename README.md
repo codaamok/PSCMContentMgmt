@@ -4,23 +4,23 @@ PowerShell module used for managing Microsoft Endpoint Manager Configuration Man
 
 ## Functions
 
-- Find-CMObject
-- Compare-DPContent
-- Compare-DPGroupContent
-- Export-DPContent
-- Get-DP
-- Get-DPContent
-- Get-DPDistributionStatus
-- Get-DPGroup
-- Get-DPGroupContent
-- Import-DPContent
-- Invoke-DPContentLibraryCleanup
-- Remove-DPContent
-- Remove-DPGroupContent
-- Set-DPAllowPrestagedContent
-- Start-DPContentDistribution
-- Start-DPContentRedistribution
-- Start-DPGroupContentDistribution
+- [Find-CMObject](docs/Find-CMOBject.md)
+- [Compare-DPContent](docs/Compare-DPContent.md)
+- [Compare-DPGroupContent](docs/Compare-DPGroupContent.md)
+- [Export-DPContent](docs/Export-DPContent.md)
+- [Get-DP](docs/Get-DP.md)
+- [Get-DPContent](docs/Get-DPContent.md)
+- [Get-DPDistributionStatus](docs/Get-DPDistributionStatus.md)
+- [Get-DPGroup](docs/Get-DPGroup.md)
+- [Get-DPGroupContent](docs/Get-DPGroupContent.md)
+- [Import-DPContent](docs/Import-DPContent.md)
+- [Invoke-DPContentLibraryCleanup](docs/Invoke-DPContentLibraryCleanup.md)
+- [Remove-DPContent](docs/Remove-DPContent.md)
+- [Remove-DPGroupContent](docs/Remove-DPGroupContent.md)
+- [Set-DPAllowPrestagedContent](docs/Set-DPAllowPrestagedContent.md)
+- [Start-DPContentDistribution](docs/Start-DPContentDistribution.md)
+- [Start-DPContentRedistribution](docs/Start-DPContentRedistribution.md)
+- [Start-DPGroupContentDistribution](docs/Start-DPGroupContentDistribution.md)
 
 Where any of the functions return an object with the property `ObjectID`, it will always return `PackageID` for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where the `CI_ID` is always retrieved. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
 
@@ -29,8 +29,8 @@ Where any of the functions return an object with the property `ObjectID`, it wil
 Install and import:
 
 ```powershell
-Install-Module PSCMContentMgmt -Scope CurrentUSer
-Import-Module PSCMContentMgmt
+PS C:\> Install-Module PSCMContentMgmt -Scope CurrentUSer
+PS C:\> Import-Module PSCMContentMgmt
 ```
 
 If you receive a warning along the lines of being unable to auto-populate variables `$CMSiteServer` or `$CMSiteCode`, that means the module failed to sniff the registry on your location machine to find your site server's FQDN, and/or read the site server's SMS_ProviderLocation class to retrieve your site code. 
@@ -38,6 +38,13 @@ If you receive a warning along the lines of being unable to auto-populate variab
 If you receive either of these warnings, use `-SiteServer` and `-SiteCode` parameters which are available for all functions or set `$CMSiteServer` and `$CMSiteCode` in your session.
 
 The registry key it attempts to read for your site server's FQDN is `HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection` which is used by the Configuration Manager console.
+
+For help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
+
+```powershell
+PS C:\> Get-Help "about_PSCMContentMgmt*"
+PS C:\> Get-Help "Find-CMObject" -Detailed
+```
 
 ## Examples
 
