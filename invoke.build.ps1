@@ -10,11 +10,14 @@ param (
     [String]$Author = $env:GH_USERNAME,
 
     [Parameter()]
+    [Switch]$UpdateDocs,
+
+    [Parameter()]
     [Switch]$NewRelease
 )
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset, UpdateDocs
+task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyAboutHelp, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset, UpdateDocs
 
 # Synopsis: Empty the contents of the build and release directories. If not exist, create them.
 task Clean {
@@ -255,6 +258,11 @@ task CopyLicense {
     Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$Script:ModuleName\LICENSE
 }
 
+# Synopsis: Copy "About" help files (must exist)
+task CopyAboutHelp {
+    Copy-Item -Path $BuildRoot\$Script:ModuleName\en-US -Destination $BuildRoot\build\$Script:ModuleName -Recurse
+}
+
 # Synopsis: Copy module manifest files (must exist)
 task CopyModuleManifest {
     $Script:ManifestFile = Copy-Item -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1 -Destination $BuildRoot\build\$Script:ModuleName\$Script:ModuleName.psd1 -PassThru
@@ -296,16 +304,8 @@ task CreateReleaseAsset {
     Compress-Archive -Path $BuildRoot\build\$Script:ModuleName\* -DestinationPath $BuildRoot\release\$ReleaseAsset -Force
 }
 
-# Synopsis: Update documentation (-NewRelease switch parameter)
-task UpdateDocs -If ($NewRelease.IsPresent) {
-    $Docs = Get-ChildItem -Path $BuildRoot\docs -Fitler "*.md"
-
-    Import-Module -Name $BuildRoot\build\$Script:ModuleName -ErrorAction "Stop"
-
-    if ($null -eq $Docs -Or $Docs.Count -eq 0) {
-        New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs
-    }
-    else {
-        Update-MarkdownHelpModule -Path $BuildRoot\docs
-    }
+# Synopsis: Update documentation (-NewRelease or -UpdateDocs switch parameter)
+task UpdateDocs -If ($NewRelease.IsPresent -Or $UpdateDocs.IsPresent) {
+    Import-Module -Name $BuildRoot\build\$Script:ModuleName -Force -ErrorAction "Stop"
+    New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs -Force
 }

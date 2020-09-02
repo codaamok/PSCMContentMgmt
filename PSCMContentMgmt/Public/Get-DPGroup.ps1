@@ -18,6 +18,10 @@ function Get-DPGroup {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        Microsoft.Management.Infrastructure.CimInstance#SMS_DistributionPointGroup
     .EXAMPLE
         PS C:\> Get-DPGroup
 
@@ -25,13 +29,14 @@ function Get-DPGroup {
     .EXAMPLE
         PS C:\> Get-DPGroup -Name "All%" -Exclude "London%"
 
-        Return all distribution point groups where their Name starts with "All" but exclude those where their name starts with "London".
+        Return all distribution point groups where their Name starts with All but exclude those where their name starts with London.
     .EXAMPLE
         PS C:\> Get-DPGroup -Name "All DPs" | Get-DPGroupContent
 
-        Get all the content associated with the distribution point group "All DPs".
+        Get all the content associated with the distribution point group All DPs.
     #>
     [CmdletBinding()]
+    [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
     param (
         [Parameter()]
         [ValidateNotNullOrEmpty()]

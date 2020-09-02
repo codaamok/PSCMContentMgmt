@@ -1,0 +1,32 @@
+TOPIC
+    about_PSCMContentMgmt_Delete
+
+SHORT DESCRIPTION
+    An overview of the functions in PSCMContentMgmt used for deleting
+    content from distribution points or distribution point groups.
+
+LONG DESCRIPTION
+    As mentioned in about_PSCMContentMgmt, some functions in PSCMContentMgmt
+    are wrappers for cmdlets in the Configuration Manager module.
+
+    These functions are good examples of that. However the main benefit
+    is pipeline support. This enables you to quickly take action with certain
+    tasks.
+
+    With the exception of Invoke-DPContentLibraryCleanup, this is a wrapper
+    for the ContentLibraryCleanup.exe binary.
+
+COMMANDS
+    * Remove-DPContent
+        Removes content objects from a given distribution point.
+
+    * Remove-DPGroupContent
+        Removes content objects from a given distribution point group.
+
+    * Invoke-DPContentLibraryCleanup
+        As previously mentioned, this is simply a wrapper for the Content
+        library clean up tool. 
+        
+        Read more about the content library cleanup tool here:
+
+        https://docs.microsoft.com/en-us/mem/configmgr/core/plan-design/hierarchy/content-library-cleanup-tool

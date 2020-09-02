@@ -20,6 +20,10 @@ function Find-CMOBject {
             - User Collections
             - Device Collections
             - (Software Update) Deployment Packages
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Find-CMObject -ID "ACC00048"
 
@@ -50,6 +54,7 @@ function Find-CMOBject {
         Finds a driver which matches the ModelName "SCOPEID_B3FF3CC4-0319-4434-9D24-77689C53C615/DRIVER_4E2772AE8A92D353896D69ECCA435728C4B44957_180B604588D114D354CFF75148B012319F39A8EB8F7C5AB10C21084AEA14F0D5"
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]

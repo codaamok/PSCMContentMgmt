@@ -1,7 +1,11 @@
 function Set-DPAllowPrestagedContent {
     <#
     .SYNOPSIS
-        Configure the allow prestage content setting for a distribution point
+        Configure the allow prestage content setting for a distribution point.
+    .DESCRIPTION
+        Configure the allow prestage content setting for a distribution point.
+
+        This can be useful if you are intending to use Export-DPContent and Import-DPContent for a distribution point content library migration. If this is your intent, ensure you first configure your distribution point to allow prestage content using this function, distribute the content objects you want to import (see Start-DPContentDistribution) and then you should use Import-DPContent.
     .PARAMETER DistributionPoint
         Name of distribution point (as it appears in Configuration Manager, usually FQDN) you want to change the setting on.
     .PARAMETER State
@@ -18,12 +22,17 @@ function Set-DPAllowPrestagedContent {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Set-DPAllowPrestageContent -DistributionPoint "dp1.contoso.com" -State $true -WhatIf
 
-        Enables "dp1.contoso.com" to allow prestaged content.
+        Enables dp1.contoso.com to allow prestaged content.
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "Medium")]
+    [OutputType([PSCustomObject])]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]

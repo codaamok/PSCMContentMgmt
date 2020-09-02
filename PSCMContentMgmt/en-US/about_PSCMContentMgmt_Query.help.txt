@@ -1,0 +1,53 @@
+TOPIC
+    about_PSCMContentMgmt_Query
+
+SHORT DESCRIPTION
+    An overview of the functions in PSCMContentMgmt to query distribution 
+    points and distribution point groups.
+
+LONG DESCRIPTION
+    PSCMContentMgmt contains functions to help you find distribution points
+    and distribution point groups in your sites. Functions are also available
+    to query what content objects are distributed to them.
+
+COMMANDS
+    * Find-CMObject
+        This is useful if you are reviewing a Configuration Manager log file,
+        and you want to easily know what object an ID resolve to.
+
+        The function accepts a parameter -ID where any arbitrary Configuration 
+        Manager ID can be passed to it, and it will return any matching objects
+        associated with the ID. 
+        
+        For example, you can pass an ID type of PackageID, CI_ID or ModelID.
+        The function will search a series of WMI classes on your site server
+        to find a matching object.
+
+    * Get-DP
+        Search for distribution point by name in your site. % wildcard
+        supported.
+
+    * Get-DPContent
+        Query the content objects distributed to distribution point(s).
+
+    * Get-DPGroup
+        Search for distribution point groups by name in yoru site. % wildcard
+        supported.
+
+    * Get-DPGroupContent
+        Query the content objects distributed to distribution point group(s).
+
+    * Get-DPDistributionStatus
+        Query the status of all content objects distributed to a distribution
+        point.
+
+    * Compare-DPContent
+        Compares the content objects distributed between two distribution
+        points, and returns those which are missing from the target
+        distribution point compared to the source distribution point.
+
+    * Compare-DPGroupContent
+        Compares the content objects distributed between two distribution
+        point groups, and returns those which are missing from the target
+        distribution point group compared to the source distribution point
+        group.

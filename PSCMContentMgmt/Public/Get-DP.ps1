@@ -18,6 +18,10 @@ function Get-DP {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        Microsoft.Management.Infrastructure.CimInstance#SMS_DistributionPointInfo
     .EXAMPLE
         PS C:\> Get-DP
 
@@ -25,7 +29,7 @@ function Get-DP {
     .EXAMPLE
         PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
 
-        Return distribution points which have a ServerName property starting with "SERVERA" or "SERVERB", but excluding any that match "CMG" anywhere in its name.
+        Return distribution points which have a ServerName property starting with SERVERA or SERVERB, but excluding any that match CMG anywhere in its name.
     .EXAMPLE
         PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property Name
 
@@ -36,6 +40,7 @@ function Get-DP {
         Return all content objects found on distribution points where their ServerName starts with "London".
     #>
     [CmdletBinding()]
+    [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
     param (
         [Parameter()]
         [ValidateNotNullOrEmpty()]

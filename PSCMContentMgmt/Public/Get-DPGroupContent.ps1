@@ -1,9 +1,9 @@
 function Get-DPGroupContent {
     <#
     .SYNOPSIS
-        Get all content distributed to a given distribution point group by querying the SMS_DPGroupContentInfo.
+        Get all content distributed to a given distribution point group.
     .DESCRIPTION
-        Get all content distributed to a given distribution point group by querying the SMS_DPGroupContentInfo.
+        Get all content distributed to a given distribution point group.
 
         By default this function returns all content object types that match the given distribution point group in the SMS_DPGroupContentInfo class on the site server.
 
@@ -36,6 +36,10 @@ function Get-DPGroupContent {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        System.String[]
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Get-DPGroupContent -DistributionPointGroup "Asia DPs" -Package -Application
 
@@ -46,6 +50,7 @@ function Get-DPGroupContent {
         Get all the content associated with the distribution point group "All DPs".
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param(
         [Alias("Name")]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]

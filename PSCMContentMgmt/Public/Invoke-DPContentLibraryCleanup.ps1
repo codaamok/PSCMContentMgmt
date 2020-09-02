@@ -26,6 +26,10 @@ function Invoke-DPContentLibraryCleanup {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        System.Array of System.String
     .EXAMPLE
         PS C:\> Invoke-DPContentLibraryCleanup.ps1 -DistributionPoint "dp1.contoso.com"
 
@@ -36,6 +40,7 @@ function Invoke-DPContentLibraryCleanup {
         Deletes orphaned content on "dp1.contoso.com". Uses binary "C:\Sources\ContentLibraryCleanup.exe".
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
+    [OutputType([System.Array])]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]

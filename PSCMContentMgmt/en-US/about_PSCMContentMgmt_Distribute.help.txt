@@ -1,0 +1,37 @@
+TOPIC
+    about_PSCMContentMgmt_Distribution
+
+SHORT DESCRIPTION
+    An overview of the functions is PSCMContentMgmt used for distributing
+    content to distribution points or distribution point groups.
+
+LONG DESCRIPTION
+    As mentioned in about_PSCMContentMgmt, some functions in PSCMContentMgmt
+    are wrappers for cmdlets in the Configuration Manager module.
+
+    These functions are good examples of that. However the main benefit
+    is pipeline support. This enables you to quickly take action with certain
+    tasks.
+
+COMMANDS
+    * Start-DPContentDistribution
+        Initiates distribution of content objects to a given distribution
+        point.
+
+    * Start-DPContentRedistribution
+        Initiates redistribution of content objects to a given distribution
+        point.
+        
+        This differs from Start-DPContentDistribution in that
+        this function redistributes content that has been previously
+        distributed to the distribution point, regardless of that content
+        object's distribution status (success, retrying or failed).
+
+        Start-DPContentDistribution can only distribute content objects to
+        distribution points where said content object is not returned from
+        Get-DPContent (in other words, in the Content tab of the
+        distribution point's properties).
+
+    * Start-DPGroupContentDistribution
+        Initiates redistribution of content objects to a given distribution
+        point group.

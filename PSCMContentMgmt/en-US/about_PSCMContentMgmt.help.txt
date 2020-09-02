@@ -1,0 +1,55 @@
+TOPIC
+    about_PSCMContentMgmt
+
+SHORT DESCRIPTION
+    An overview of the PSCMContentMgmt module.
+
+LONG DESCRIPTION
+    Distribution Points are undoubtedly the most common site system type
+    to install on servers at remote sites. 
+
+    This module soughts to help you manage them by giving you functions to:
+        
+        * Query distribution points and distribution point groups, and identify
+        what content objects are distributed to them
+        * Compare distributed content objects between two distribution points 
+        or distribution point groups
+        * Redistribute or distribute content objects returned by this module 
+        to other distribution points or distribution point groups
+        * Invoke the DP content library cleanup tool
+        * Export and import .pkgx files
+        * Find any object with any given Configuration Manager ID
+
+    Several of the functions in this module are wrappers for cmdlets
+    in the Configuration Manager module. PSCMContentMgmt does not attempt to
+    reinvent the wheel from these cmdlets, but instead provide a simpler
+    workflow for managing distribution points and their content.
+
+    The simple workflow offers you:
+    
+        * Pipeline support so you can easily progress through the motions
+        for tasks such as querying content on a distribution point
+        and distributing it to another, or finding all content objects
+        which failed to distribute and initiate a redistribution
+        * Consistent property names when dealing with different types of
+        content objects
+        * Provide functionality which the Configuration Manager module does
+        not provide (e.g. content redistribution or import .pkgx files)
+
+    It is worth pointing out, that in those scenarios where a PSCMContentMgmt
+    function is invoking a Configuration Manager module cmdlet, any caught
+    exceptions are forwarded on to you as the user. The Configuration Manager
+    module (at the time of writing this) is notoriously for its generic
+    and "catch-all" stype exception handling.
+
+    In other words, if an exception is thrown a Configuration Manager cmdlet
+    and the error message is vague or misleading, don't blame me :-).
+
+    To find out more information on how to use this module with the above
+    features described, see the MORE HELP section below.
+    
+MORE HELP
+    For more help on how to use all capaibilities of this module, run:
+
+    Get-Help about_PSCMContentMgmt*
+    

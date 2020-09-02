@@ -9,9 +9,11 @@ function Import-DPContent {
 
         Must be run locally to the distribution point you're importing content to, and run as administrator (ExtractContent.exe requirement).
 
-        By default, this function only imports objects which are in "pending" state in the SMS_PackageStatusDistPointsSummarizer class on the site server (in console, view objects' distribution state in Monitoring > Distribution Status > Content Status).
+        It is recommended you first configure your distribution point to allow prestage content (see Set-DPAllowPrestagedContent), distribute the content objects you want to import (see Start-DPContentDistribution) and then you should use Import-DPContent.
+
+        Import-DPContent only imports content objects which are in "pending" state in the SMS_PackageStatusDistPointsSummarizer class on the site server (in console, view objects' distribution state in Monitoring > Distribution Status > Content Status).
         
-        For objects which are "pending", the function looks in the given -Folder for .pkgx files and attempts to import them by calling ExtractContent.exe with those files.
+        For content objects which are "pending", the function looks in the given -Folder for .pkgx files and attempts to import them by calling ExtractContent.exe with those files.
         
         The .pkgx files in -Folder must match the file name pattern of "<ObjectType>_<ObjectID>.pkgx". The Export-DPContent function generates .pkgx files in this format. For example:
             512_16873723.pkgx - an Application (512, as per SMS_DPContentInfo) with CI_ID value 16873723
@@ -30,7 +32,7 @@ function Import-DPContent {
 
         The function attempts to discover the location of this exe, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
     .PARAMETER ImportAllFromFolder
-        Import all .pkgx files found -Folder regardless as to whether the object is currently in pending state or not.
+        Import all .pkgx files found -Folder regardless as to whether the content object is currently in pending state or not.
     .PARAMETER SiteServer       
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
         
@@ -41,16 +43,21 @@ function Import-DPContent {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Import-DPContent -Folder "F:\prestaged" -WhatIf
 
-        Imports .pkgx files found in F:\prestaged but only if the objects are in "pending" state.
+        Imports .pkgx files found in F:\prestaged but only if the content objects are in "pending" state.
     .EXAMPLE
         PS C:\> Import-DPContent -Folder "\\server\share\prestaged" -ImportAllFromFolder -WhatIf
 
         Imports all .pkgx files found in \\server\share\prestaged.
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = "High")]
+    [OutputType([PSCustomObject])]
     param (
         [Parameter(Mandatory)]
         [ValidateScript({

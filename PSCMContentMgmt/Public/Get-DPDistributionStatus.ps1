@@ -1,27 +1,29 @@
 function Get-DPDistributionStatus {
     <#
     .SYNOPSIS
-        Retrieve the content distribution status of all objects for a distribution point.
+        Retrieve the content distribution status of all content objects for a distribution point.
+    .DESCRIPTION
+        Retrieve the content distribution status of all content objects for a distribution point.
     .PARAMETER DistributionPoint
         Name of distribution point(s) (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER Distributed
-        Filter on objects in distributed state
+        Filter on content objects in distributed state
     .PARAMETER DistributionPending
-        Filter on objects in distribution pending state
+        Filter on content objects in distribution pending state
     .PARAMETER DistributionRetrying
-        Filter on objects in distribution retrying state
+        Filter on content objects in distribution retrying state
     .PARAMETER DistributionFailed
-        Filter on objects in distribution failed state
+        Filter on content objects in distribution failed state
     .PARAMETER RemovalPending
-        Filter on objects in removal pending state
+        Filter on content objects in removal pending state
     .PARAMETER RemovalRetrying
-        Filter on objects in removal retrying state
+        Filter on content objects in removal retrying state
     .PARAMETER RemovalFailed
-        Filter on objects in removal failed state
+        Filter on content objects in removal failed state
     .PARAMETER ContentUpdating
-        Filter on objects in content updating state
+        Filter on content objects in content updating state
     .PARAMETER ContentMonitoring
-        Filter on objects in content monitoring state
+        Filter on content objects in content monitoring state
     .PARAMETER SiteServer
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
 
@@ -32,17 +34,25 @@ function Get-DPDistributionStatus {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
 
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        System.String[]
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Get-DPDistributionStatus -DistributionPoint "dp1.contoso.com"
 
-        Gets the content distribution status for all objects on "dp1.contoso.com".
+        Gets the content distribution status for all content objects on dp1.contoso.com.
+    .EXAMPLE
+        PS C:\> Get-DPDistributionStatus -DistributionPoint "dp1.contoso.com" | Start-DPContentRedistribution
+
+        Gets the content distribution status for content objects in DistributionFailed state on dp1.contoso.com and initiates redisitribution for each of those content objects.
     .EXAMPLE
         PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
 
         Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
-
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param (
         [Alias("Name", "ServerName")]
         [ParameteR(Mandatory, ValueFromPipelineByPropertyName)]

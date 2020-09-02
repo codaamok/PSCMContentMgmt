@@ -5,4 +5,7 @@
 ✔ Some functions/cmdlet calls are forced -ErrorAction "Stop" where I might expect users to make use of their own error action preference @done (27/08/2020, 21:23:30)
 ✔ Heavily point out that for applications, all of the time, ObjectId is CI_ID. e.g. point that out in Start-DPContentRedistribution @done (29/08/2020, 17:23:17)
 ✔ Remove wildcards in some WQL queries where it's expected to not have wildcards @done (29/08/2020, 16:51:38)
-☐ Ensure adequate examples and comment based help for Start-DPContentRedistribution and Get-DPGroup
+✔ Ensure adequate examples and comment based help for Start-DPContentRedistribution and Get-DPGroup @done (02/09/2020, 23:04:15)
+✔ ensure synopsis and description is used everywhere @done (02/09/2020, 23:01:44)
+✔ complete inputs and outputs section for each function @done (02/09/2020, 23:01:40)
+✔ add [OutputType()] attribute to all functions https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_outputtypeattribute?view=powershell-7#:~:text=The%20OutputType%20attribute%20lists%20the,on%20simple%20and%20advanced%20functions. @done (02/09/2020, 23:01:37)

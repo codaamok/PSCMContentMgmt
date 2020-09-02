@@ -36,6 +36,10 @@ function Get-DPContent {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        System.String[]
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Get-DPContent -Name dp.contoso.com -Package -Application
 
@@ -46,6 +50,7 @@ function Get-DPContent {
         Return all content objects found on distribution points where their ServerName starts with "London".
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param(
         [Alias("Name")]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName)]

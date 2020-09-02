@@ -1,7 +1,11 @@
 function Compare-DPGroupContent {
     <#
     .SYNOPSIS
-        Returns a list of content objects missing from the given target server compared to the source server.
+        Returns a list of content objects missing from the given target distribution point group compared to the source distribution point group.
+    .DESCRIPTION
+        Returns a list of content objects missing from the given target distribution poiint group compared to the source distribution poiint group.
+
+        This function calls Get-DPGroupContent for both -Source and -Target. The results are passed to Compare-Object. The reference object is -Source and the difference object is -Target.
     .PARAMETER Source
         Name of the referencing distribution point group you want to query.
     .PARAMETER Target
@@ -16,22 +20,27 @@ function Compare-DPGroupContent {
         It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
         
         Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+    .INPUTS
+        This function does not accept pipeline input.
+    .OUTPUTS
+        System.Management.Automation.PSObject
     .EXAMPLE
         PS C:\> Compare-DPGroupContent -Source "Asia DPs" -Target "Europe DPs"
 
-        Return content objects which are missing from "Europe DPs" compared to "Asia DPs"
+        Return content objects which are missing from Europe DPs compared to Asia DPs.
     .EXAMPLE
         PS C:\> Compare-DPGroupContent -Source "London DPs" -Target "Mancester DPs" | Start-DPGroupContentDistribution -DistributionPointGroup "Mancester DPs"
 
-        Compares the missing content objects in group Manchester DPs compared to "London DPs", and distributes them to distribution point group Manchester DPs.
+        Compares the missing content objects in group Manchester DPs compared to London DPs, and distributes them to distribution point group Manchester DPs.
     .EXAMPLE
         PS C:\> Compare-DPGroupContent -Source "London DPs" -Target "Mancester DPs" | Remove-DPGroupContent 
 
-        Compares the missing content objects in group Manchester DPs compared to "London DPs", and removes them from distribution point group "London DPs".
+        Compares the missing content objects in group Manchester DPs compared to London DPs, and removes them from distribution point group London DPs.
 
-        Use -DistributionPointGroup with Remove-DPGroupContent to either explicitly target "London DPs" or some other group. In this example, "London DPs" is the implicit target distribution point group as it reads the DistributionPointGroup property return from Compare-DPGroupContent.
+        Use -DistributionPointGroup with Remove-DPGroupContent to either explicitly target London DPs or some other group. In this example, London DPs is the implicit target distribution point group as it reads the DistributionPointGroup passed through the pipeline.
     #>
     [CmdletBinding()]
+    [OutputType([PSCustomObject])]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]

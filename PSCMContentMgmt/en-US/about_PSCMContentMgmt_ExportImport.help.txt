@@ -1,0 +1,62 @@
+TOPIC
+    about_PSCMContentMgmt_ExportImport
+
+SHORT DESCRIPTION
+    An overview of the functions in PSCMContentMgmt used for managing
+    distribution point .pkgx files.
+
+LONG DESCRIPTION
+    Being able to quickly and easily export distribution point content
+    to .pkgx files can help you in several ways.
+
+    For example, it may be an ideal solution to migrating content from
+    one distribution point to another when comissioning a new server. 
+    Ideally, a pull distribution point would be configured for this sort
+    of task. However these functions offer you an alternative method
+    if you are unable to use pull distribution points.
+
+    Another example is that you could easily export your distribution point 
+    content to .pkgx for disaster recovery or troubleshooting needs. 
+
+COMMANDS
+    * Export-DPContent
+        Exports a distribution point's content to .pkgx in a given folder.
+
+        This function requires the Configuration Manager module to be available
+        locally. At the time of writing this, there's no other way to get
+        the module other than installing the Configuration Manager console.
+
+        While you could run this remotely from the distribution point of which
+        you want to export content from, it's likely you actually want to run
+        it localhost to the distribution point and save the content either
+        locally or on another system nearby.
+
+    * Import-DPContent
+        Imports previously exported content (.pkgx files).
+
+        This function requires the Configuration Manager module to be available
+        locally. At the time of writing this, there's no other way to get
+        the module other than installing the Configuration Manager console.
+
+        Unlike Export-DPContent, this cannot be executed remotely. This must
+        be ran localhost to the distribution point of which you intend to
+        import content to.
+        
+        This is because is invokes ExtractContent.exe to unpack the .pkgx
+        files and import the decompressed content directly in to the
+        content library.
+
+        Since this function invokes ExtractContent.exe, the calling shell or
+        script must be elevated. This is a requirement for ExtractedContent.exe.
+
+    * Set-DPAllowPrestagedContent
+        A simple wrapper to configure a distribution point to only
+        accept content from prestaged (.pkgx) files. 
+        
+        This is the same as the check box "Enable this distribution point
+        for prestaged content" in a distribution point's properties within
+        console.
+        
+        If you are cautious about sending content across the WAN from your
+        site server's content library, this is an important step when intending
+        to use Import-DPContent after Start-DPContentDistribution.
