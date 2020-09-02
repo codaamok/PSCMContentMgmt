@@ -10,6 +10,13 @@ LONG DESCRIPTION
     and distribution point groups in your sites. Functions are also available
     to query what content objects are distributed to them.
 
+    Where any of the functions return an object with the property ObjectID, it
+    will always return PackageID for all content objects (Packages,
+    Driver Packages, Boot Images etc) except for Applications/Deployment Types
+    where the CI_ID is always retrieved. This enables you to have a property
+    ready to use for Applications with any of the cmdlets from the
+    Configuration Manager module.
+
 COMMANDS
     * Find-CMObject
         This is useful if you are reviewing a Configuration Manager log file,
