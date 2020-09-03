@@ -5,7 +5,7 @@ function Set-DPAllowPrestagedContent {
     .DESCRIPTION
         Configure the allow prestage content setting for a distribution point.
 
-        This can be useful if you are intending to use Export-DPContent and Import-DPContent for a distribution point content library migration. If this is your intent, ensure you first configure your distribution point to allow prestage content using this function, distribute the content objects you want to import (see Start-DPContentDistribution) and then you should use Import-DPContent.
+        This can be useful if you are intending to use Export-DPContent and Import-DPContent for a distribution point content library migration. If this is your intent, please read the CONTENT LIBRARY MIRATION section in the About help topic about_PSCMContentMgmt_ExportImport.
     .PARAMETER DistributionPoint
         Name of distribution point (as it appears in Configuration Manager, usually FQDN) you want to change the setting on.
     .PARAMETER State

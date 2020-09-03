@@ -2,14 +2,12 @@ function Import-DPContent {
     <#
     .SYNOPSIS
         Imports .pkgx files to the local distribution point found in the given -Folder.
-
-        Must be run locally to the distribution point you're importing content to, and run as administrator (ExtractContent.exe requirement).
     .DESCRIPTION
         Imports .pkgx files to the local distribution point found in the given -Folder.
 
         Must be run locally to the distribution point you're importing content to, and run as administrator (ExtractContent.exe requirement).
 
-        It is recommended you first configure your distribution point to allow prestage content (see Set-DPAllowPrestagedContent), distribute the content objects you want to import (see Start-DPContentDistribution) and then you should use Import-DPContent.
+        For further guidance on how migrate a distribution point's content library using this function, Export-DPContent and Set-DPAllowPrestagedContent, please read the CONTENT LIBRARY MIRATION section in the About help topic about_PSCMContentMgmt_ExportImport.
 
         Import-DPContent only imports content objects which are in "pending" state in the SMS_PackageStatusDistPointsSummarizer class on the site server (in console, view objects' distribution state in Monitoring > Distribution Status > Content Status).
         

@@ -8,7 +8,7 @@ LONG DESCRIPTION
     Distribution Points are undoubtedly the most common site system type
     to install on servers at remote sites. 
 
-    This module soughts to help you manage them by giving you functions to:
+    This module aims to help you manage them by giving you functions to:
         
         * Query distribution points and distribution point groups, and identify
         what content objects are distributed to them
@@ -36,14 +36,17 @@ LONG DESCRIPTION
         * Provide functionality which the Configuration Manager module does
         not provide (e.g. content redistribution or import .pkgx files)
 
-    It is worth pointing out, that in those scenarios where a PSCMContentMgmt
-    function is invoking a Configuration Manager module cmdlet, any caught
-    exceptions are forwarded on to you as the user. The Configuration Manager
-    module (at the time of writing this) is notoriously for its generic
-    and "catch-all" stype exception handling.
+    Where any of the functions return an object with the property `ObjectID`, 
+    it will always return `PackageID` for all content objects 
+    (Packages, Driver Packages, Boot Images etc) except for 
+    Applications/Deployment Types where the `CI_ID` is always retrieved. 
+    This enables you to have a property ready to use for Applications with 
+    any of the cmdlets from the Configuration Manager module.
 
-    In other words, if an exception is thrown a Configuration Manager cmdlet
-    and the error message is vague or misleading, don't blame me :-).
+    The Configuration Manager module notoriously returns generic error messages
+    (if any) for most of its cmdlets/functions. Since this module is mostly
+    nothing more than a wrapper for most cmdlets/functions, I just forward
+    those messages on to you so please bear that in mind.
 
     To find out more information on how to use this module with the above
     features described, see the MORE HELP section below.

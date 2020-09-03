@@ -4,13 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
-
-## [1.4.20200902.1] - 2020-09-02
 ### Added
-- Added Get-DP function
-- Added Get-DPGroup function
-- Added Start-DPContentRedistribution function
-- Added About help topics, run `Get-Help about_PSCMContentMgmt*`
+- New Get-DP function
+- New Get-DPGroup function
+- New Start-DPContentRedistribution function
+- New About help topics, run `Get-Help about_PSCMContentMgmt*`
 
 ### Changed
 - Get-DPDistributionStatus now accepts value from pipeline or an array of distribution points

@@ -22,8 +22,6 @@ PowerShell module used for managing Microsoft Endpoint Manager Configuration Man
 - [Start-DPContentRedistribution](docs/Start-DPContentRedistribution.md)
 - [Start-DPGroupContentDistribution](docs/Start-DPGroupContentDistribution.md)
 
-Where any of the functions return an object with the property `ObjectID`, it will always return `PackageID` for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where the `CI_ID` is always retrieved. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
-
 ## Getting started
 
 Install and import:
@@ -33,13 +31,23 @@ PS C:\> Install-Module PSCMContentMgmt -Scope CurrentUser
 PS C:\> Import-Module PSCMContentMgmt
 ```
 
-If you receive a warning along the lines of being unable to auto-populate variables `$CMSiteServer` or `$CMSiteCode`, that means the module failed to sniff the registry on your location machine to find your site server's FQDN, and/or read the site server's SMS_ProviderLocation class to retrieve your site code. 
+All functions of the module require use of `-SiteServer` or `-SiteCode` parameters. This can be tedious to repeatedly type out. Therefore upon importing the module, two variables will be set in your session:
 
-If you receive either of these warnings, use `-SiteServer` and `-SiteCode` parameters which are available for all functions or set `$CMSiteServer` and `$CMSiteCode` in your session.
+- `$CMSiteServer`
+  - Value determined by reading the `Server` registry value in key `HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection`.
+  - This registry key is used by the Configuration Manager module, therefore it is assumed this is the site you want to work in.
+- `$CMSiteCode`
+  - Value determined by reading the `SiteCode` property in the `SMS_ProviderLocation` WMI class on the server defined in `$CMSiteServer`.
 
-The registry key it attempts to read for your site server's FQDN is `HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection` which is used by the Configuration Manager console.
+Ovewritting these variables is OK and essential if you operate in a multi-site environment.
 
-For help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
+If you receive a warning along the lines of being unable to auto-populate variables `$CMSiteServer` or `$CMSiteCode`, that means the module failed to read the previously mentioned registry value or the `SMS_ProviderLocation` class on your site server.
+
+If the reason why the module could not set these variables itself is not known, or there's no viable workaround for you, then you can set `$CMSiteServer` or `$CMSiteCode` yourself. Alternatively you can use the `-SiteServer` and `-SiteCode` parameters on an ad-hoc basis.
+
+Where any of the functions return an object with the property `ObjectID`, it will always return `PackageID` for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where the `CI_ID` is always retrieved. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
+
+For further help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
 
 ```powershell
 PS C:\> Get-Help "about_PSCMContentMgmt*"
