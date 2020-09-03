@@ -49,7 +49,7 @@ function Get-DPDistributionStatus {
     .EXAMPLE
         PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
 
-        Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
+        Return all distribution points, their associated failed distribution tasks and group the results by distribution point name for an overview.
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
