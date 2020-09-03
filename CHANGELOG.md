@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Typo in comment based help get Get-DPDistributionStatus
 
 ## [1.4.20200903.0] - 2020-09-03
 ### Added
