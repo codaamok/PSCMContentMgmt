@@ -65,12 +65,20 @@ If the reason why the module could not set these variables itself is not known, 
 
 Where any of the functions return an object with the property ObjectID, or where a parameter is named -ObjectID, it will always be the PackageID for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where it is CI_ID. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
 
-For further help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
+## Support
+
+For help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
 
 ```powershell
 PS C:\> Get-Help "about_PSCMContentMgmt*"
 PS C:\> Get-Help "Find-CMObject" -Detailed
 ```
+
+Failing that:
+
+- If you think you've experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
+- Ping me on Twitter ([@codaamok](https://twitter.com/codaamok))
+- Come to the [WinAdmins Discord](https://winadmins.io) and bug me there, my handle is @acc.
 
 ## Examples
 
