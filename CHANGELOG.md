@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
 - Updated various help content to better describe -ObjectID parameter and ObjectID property
 
 ## [1.5.20200903.0] - 2020-09-03
