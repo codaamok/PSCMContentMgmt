@@ -101,13 +101,13 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @("SCCM", "MEMCM", "MECM", "ConfigMgr", "Pistribution Point", "Configuration Manager")
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/codaamok/PSCMContentMgmt/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/codaamok/PSCMContentMgmt'
 
         # A URL to an icon representing this module.
         # IconUri = ''
