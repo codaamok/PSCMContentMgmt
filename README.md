@@ -129,27 +129,6 @@ _Note: the same is available for groups with `Start-DPGroupContentDistribution`.
 ___
 
 ```powershell
-PS C:\> Get-DPContent -DistributionPoint "OldDP.contoso.com" | Export-DPContent -Folder "\\NewDP.contoso.com\export$"
-
-PS C:\> Set-DPAllowPrestagedContent -DistributionPoint "NewDP.contoso.com" -State $true
-
-PS C:\> Start-DPContentDistribution -Folder "\\NewDP.contoso.com\export$" -DistributionPoint "NewDP.contoso.com"
-
-PS C:\> # log in to NewDP.contoso.com
-
-PS C:\> $env:ComputerName
-NewDP
-
-PS C:\> Import-DPContent -Folder "E:\export"
-```
-
-Migrate Distribution Points by exporting all content on OldDP.contoso.com and import the .pkgx files to NewDP.contoso.com (note that `Import-DPContent` must be ran localhost on the ideal server).
-
-_Note: in an ideal world you'll use Pull Distribution Points to stand up a new DP beside another, but this is another method if that isn't an option for you._
-
-___
-
-```powershell
 PS C:\> Get-DPContent -DistributionPoint "dp1.contoso.com" -Package | Remove-DPContent
 ```
 
