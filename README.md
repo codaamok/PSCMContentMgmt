@@ -110,22 +110,6 @@ ___
 
 ```powershell
 PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com"
-
-ObjectName        : 2020-03-1809
-Description       :
-ObjectType        : DeploymentPackage
-ObjectID          : ACC000F3
-SourceSize        : 324981
-DistributionPoint : dp1.contoso.com
-
-ObjectName        : 2020-02-1809
-Description       :
-ObjectType        : DeploymentPackage
-ObjectID          : ACC000F4
-SourceSize        : 292894
-DistributionPoint : dp1.contoso.com
-
-...
 ```
 
 Return objects which are on dp1.contoso.com but not on dp2.contoso.com.
