@@ -2,6 +2,24 @@
 
 PowerShell module used for managing Microsoft Endpoint Manager Configuration Manager distribution point content.
 
+Here are some of the things you can do with it:
+
+- Query content objects which are distributed to distribution point(s) or distribution point group(s)
+- Compare content objects distributed to distribution point(s) or distribution point group(s)
+- Find content objects in a "distribution failed" state for all or selective distribution points
+- Remove, distribute or redistribute content objects returned by any function to distribution point(s)
+- Find an object in your site by searching on any arbitrary ID (useful when reading logs and want to know what object an ID resolves to)
+- Migrate a distribution point’s content to a new/different distribution point by exporting its content library to prestaged .pkgx files and importing the .pkgx files to the new distribution point
+- Invoke the ContentLibraryCleanup.exe tool
+
+PSCMContentMgmt is a mix of being no more than a wrapper for MEMCM cmdlets or native binaries. Some functions query WMI or invoke WMI methods.
+
+PSCMContentMgmt does not intend to reinvent the wheel from already available cmdlets. Instead it provides a simpler workflow for managing your distribution points by offering:
+
+- Easy to use pipeline support, so you can easily progress through the motions for tasks such as querying content on a distribution point or distribution point group – perhaps in a particular state (e.g. "distribution failed") – and distributing, redistributing or removing it from another (or the same) distribution point or distribution point group.
+- Consistent property names when dealing with different types of content objects, i.e. the ObjectID property is always PackageID except for Applications/Deployment Types where it is CI_ID.
+- Functionality which the Configuration Manager module does not provide e.g. content redistribution or import .pkgx files.
+
 ## Functions
 
 - [Find-CMObject](docs/Find-CMOBject.md)
@@ -45,7 +63,7 @@ If you receive a warning along the lines of being unable to auto-populate variab
 
 If the reason why the module could not set these variables itself is not known, or there's no viable workaround for you, then you can set `$CMSiteServer` or `$CMSiteCode` yourself. Alternatively you can use the `-SiteServer` and `-SiteCode` parameters on an ad-hoc basis.
 
-Where any of the functions return an object with the property `ObjectID`, it will always return `PackageID` for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where the `CI_ID` is always retrieved. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
+Where any of the functions return an object with the property ObjectID, or where a parameter is named -ObjectID, it will always be the PackageID for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where it is CI_ID. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
 
 For further help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
 
@@ -55,6 +73,14 @@ PS C:\> Get-Help "Find-CMObject" -Detailed
 ```
 
 ## Examples
+
+```powershell
+PS C:\> Get-Help "about_PSCMContentMgmt_ExportImpot"
+```
+
+To learn more about how to migrate distribution point content using PSCMContentMgmt, please see my [SysManSquad blog post](https://sysmansquad.com/2020/09/04/manage-distribution-point-content-using-pscmcontentmgmt/#comparing-distribution-content-objects-between-two-distribution-points-or-distribution-point-groups) or read the help topic `about_PSCMContentMgmt_ExportImport`.
+
+___
 
 ```powershell
 PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"

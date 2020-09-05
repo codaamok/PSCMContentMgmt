@@ -36,12 +36,12 @@ LONG DESCRIPTION
         * Provide functionality which the Configuration Manager module does
         not provide (e.g. content redistribution or import .pkgx files)
 
-    Where any of the functions return an object with the property `ObjectID`, 
-    it will always return `PackageID` for all content objects 
-    (Packages, Driver Packages, Boot Images etc) except for 
-    Applications/Deployment Types where the `CI_ID` is always retrieved. 
-    This enables you to have a property ready to use for Applications with 
-    any of the cmdlets from the Configuration Manager module.
+    Where any of the functions return an object with the property ObjectID, or
+    where a parameter is named -ObjectID, it will always be the PackageID for 
+    all content objects (Packages, Driver Packages, Boot Images etc) except for
+    Applications/Deployment Types where it is CI_ID. This enables you to have a
+    property ready to use for Applications with any of the cmdlets from the 
+    Configuration Manager module.
 
     The Configuration Manager module notoriously returns generic error messages
     (if any) for most of its cmdlets/functions. Since this module is mostly
