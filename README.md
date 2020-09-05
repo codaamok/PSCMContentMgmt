@@ -65,21 +65,6 @@ If the reason why the module could not set these variables itself is not known, 
 
 Where any of the functions return an object with the property ObjectID, or where a parameter is named -ObjectID, it will always be the PackageID for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where it is CI_ID. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
 
-## Support
-
-For help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
-
-```powershell
-PS C:\> Get-Help "about_PSCMContentMgmt*"
-PS C:\> Get-Help "Find-CMObject" -Detailed
-```
-
-Failing that:
-
-- If you think you've experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
-- Ping me on Twitter ([@codaamok](https://twitter.com/codaamok))
-- Come to the [WinAdmins Discord](https://winadmins.io) and bug me there, my handle is @acc.
-
 ## Examples
 
 ```powershell
@@ -225,3 +210,18 @@ Finds an application which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D2
 - `Remove-DPContent` and `Remove-DPGroupContent` only removes items that are fully distributed.
 - It is not possible to suppress the output of `Export-DPContent` (which is essentially just `Publish-CMPrestageContent`).
 - The functions given by this module are not the most performant method of dealing with distribution point content. Most of the Configuraion Manager cmdlet/functions accept arrays of IDs. Whereas I purposefully chose to call the cmdlets for each object purely for the benefit of giving success/failure results back to the user for each object.
+
+## Support
+
+For help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
+
+```powershell
+PS C:\> Get-Help "about_PSCMContentMgmt*"
+PS C:\> Get-Help "Find-CMObject" -Detailed
+```
+
+Failing that:
+
+- If you think you've experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
+- Ping me on Twitter ([@codaamok](https://twitter.com/codaamok))
+- Come to the [WinAdmins Discord](https://winadmins.io) and bug me there, my handle is @acc.
