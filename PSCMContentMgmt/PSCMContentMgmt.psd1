@@ -12,7 +12,7 @@
 RootModule = 'PSCMContentMgmt.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.6.20200905.0'
+ModuleVersion = '1.6.20200905.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -101,7 +101,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @("SCCM", "MEMCM", "MECM", "ConfigMgr")
+        Tags = 'SCCM','MEMCM','MECM','ConfigMgr'
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/codaamok/PSCMContentMgmt/blob/master/LICENSE'
@@ -113,7 +113,9 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = '# Fixed
+        ReleaseNotes = '# Added
+- More properties added to the module manifest
+# Changed
 - Updated various help content to better describe -ObjectID parameter and ObjectID property'
 
         # Prerelease string of this module
