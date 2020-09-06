@@ -268,7 +268,7 @@ task CopyModuleManifest {
     $Script:ManifestFile = Copy-Item -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1 -Destination $BuildRoot\build\$Script:ModuleName\$Script:ModuleName.psd1 -PassThru
 }
 
-# Synopsis: Copy and update the manifest in build directory. If successfully, replace manifest in the module directory
+# Synopsis: Update the manifest in build directory. If successful, replace manifest in the module directory
 task UpdateModuleManifest {  
     $UpdateModuleManifestSplat = @{
         Path = $Script:ManifestFile
