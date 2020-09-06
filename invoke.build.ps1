@@ -17,7 +17,7 @@ param (
 )
 
 # Synopsis: Initiate the entire build process
-task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyAboutHelp, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset
+task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetManifestVersionNumber, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyAboutHelp, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset
 
 # Synopsis: Empty the contents of the build and release directories. If not exist, create them.
 task Clean {
@@ -101,6 +101,11 @@ task GetReleaseNotes {
     Set-Content -Value $Script:ReleaseNotes -Path $BuildRoot\release\releasenotes.txt -Force
 }
 
+# Synopsis: Get current version number of module in the manifest file
+task GetManifestVersionNumber {
+    $Script:ModuleManifest = Import-PowerShellDataFile -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1
+}
+
 # Synopsis: Determine version number to build blish with by evaluating versions in PowerShell Gallery and in the change log
 task GetVersionToBuild {
     if ($NewRelease.IsPresent) {
@@ -157,12 +162,13 @@ task GetVersionToBuild {
         }
     }
     else {
-        $ModuleManifest = Import-PowerShellDataFile -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1
-        if ($Script:ChangeLog.Released[0].Version -eq $ModuleManifest.ModuleVersion) {
+        if ($Script:PSGalleryModuleInfo.Version -eq "0.0" -Or $Script:ChangeLog.Released[0].Version -eq $ModuleManifest.ModuleVersion) {
             $Script:VersionToBuild = [System.Version]::New(([System.Version]$ModuleManifest.ModuleVersion).Major, ([System.Version]$ModuleManifest.ModuleVersion).Minor, ([System.Version]$ModuleManifest.ModuleVersion).Build, ([System.Version]$ModuleManifest.ModuleVersion).Revision + 1)
         }
         else {
-            throw "Can not build with unmatching module version numbers in the change log and module manifest"
+            Write-Output ("Latest release version from module manifest: {0}" -f $Script:ModuleManifest.Version)
+            Write-Output ("Latest release version from PowerShell gallery: {0}" -f $Script:PSGalleryModuleInfo.Version)
+            throw "Can not determine next version number"
         }
     }
 
