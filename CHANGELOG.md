@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [1.6.20200907.0] - 2020-09-07
 ### Added
 - More properties added to the module manifest
 
@@ -41,7 +43,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Birth of change log
 
-[Unreleased]: https://github.com/codaamok/PSCMContentMgmt/compare/1.6.20200905.1..HEAD
+[Unreleased]: https://github.com/codaamok/PSCMContentMgmt/compare/1.6.20200907.0..HEAD
+[1.6.20200907.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.5.20200903.0..1.6.20200907.0
 [1.5.20200903.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.4.20200903.0..1.5.20200903.0
 [1.4.20200903.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.3.20200821.4..1.4.20200903.0
 [1.3.20200821.4]: https://github.com/codaamok/PSCMContentMgmt/compare/1.2..1.3.20200821.4
