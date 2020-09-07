@@ -124,7 +124,7 @@ function Start-DPContentRedistribution {
             }
 
             $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-            $Query = "SELECT * FROM SMS_DistributionPoint WHERE PackageID='{0}' AND ServerNALPath='{1}'" -f $ObjectIDToProcess, $TargetDP
+            $Query = "SELECT * FROM SMS_DistributionPoint WHERE PackageID='{0}' AND ServerNALPath LIKE '%{1}%'" -f $ObjectIDToProcess, $TargetDP
 
             $result = @{
                 PSTypeName = "PSCMContentMgmtRedistribute" 
@@ -134,18 +134,33 @@ function Start-DPContentRedistribution {
             }
             
             try {
-                if ($PSCmdlet.ShouldProcess(
-                    ("Would redistribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP),
-                    "Are you sure you want to continue?",
-                    ("Redistributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP))) {
-                        Get-CimInstance -ComputerName $CMSiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop" |
-                            Set-CimInstance -Property @{ RefreshNow = $true } -ErrorAction "Stop"
+                $CimObj = Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop"
 
-                        $result["Result"] = "Success"
+                if ($CimObj -isnot [Microsoft.Management.Infrastructure.CimInstance] -Or $null -eq $CimObj) {
+                    $Message = "Object '{0}' does not exist on '{1}' to initiate redistribution" -f $Object.ObjectID, $TargetDP
+                    $Exception = [InvalidOperationException]::new($Message)
+                    
+                    $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
+                        $Exception,
+                        "3",
+                        [System.Management.Automation.ErrorCategory]::ObjectNotFound,
+                        $Object.ObjectID
+                    )
+
+                    $PSCmdlet.ThrowTerminatingError($ErrorRecord)
                 }
                 else {
-                    $result["Result"] = "No change"
-                }
+                    if ($PSCmdlet.ShouldProcess(
+                        ("Would redistribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP),
+                        "Are you sure you want to continue?",
+                        ("Redistributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP))) {
+                            Set-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -Property @{ RefreshNow = $true } -ErrorAction "Stop"
+                            $result["Result"] = "Success"
+                    }
+                    else {
+                        $result["Result"] = "No change"
+                    }
+                }                
             }
             catch {
                 Write-Error -ErrorRecord $_
