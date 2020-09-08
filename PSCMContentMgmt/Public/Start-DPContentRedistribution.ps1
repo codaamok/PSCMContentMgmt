@@ -147,7 +147,7 @@ function Start-DPContentRedistribution {
                         $Object.ObjectID
                     )
 
-                    $PSCmdlet.ThrowTerminatingError($ErrorRecord)
+                    throw $ErrorRecord
                 }
                 else {
                     if ($PSCmdlet.ShouldProcess(
