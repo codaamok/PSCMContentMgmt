@@ -40,6 +40,11 @@ PSCMContentMgmt does not intend to reinvent the wheel from already available cmd
 - [Start-DPContentRedistribution](docs/Start-DPContentRedistribution.md)
 - [Start-DPGroupContentDistribution](docs/Start-DPGroupContentDistribution.md)
 
+## Requirements
+
+- PowerShell 5.1
+- Configuration Manager module available locally on the system you import the module
+
 ## Getting started
 
 Install and import:
