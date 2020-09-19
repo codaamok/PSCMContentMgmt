@@ -190,6 +190,6 @@ PS C:\> Get-Help "Find-CMObject" -Detailed
 
 Failing that:
 
-- If you think you've experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
+- If you think you're experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
 - Ping me on Twitter ([@codaamok](https://twitter.com/codaamok))
 - Come to the [WinAdmins Discord](https://winadmins.io) and bug me there, my handle is @acc.
