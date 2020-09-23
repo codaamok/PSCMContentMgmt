@@ -17,7 +17,7 @@ PSCMContentMgmt is a mix of being no more than a wrapper for MEMCM cmdlets or na
 PSCMContentMgmt does not intend to reinvent the wheel from already available cmdlets. Instead it provides a simpler workflow for managing your distribution points by offering:
 
 - Easy to use pipeline support, so you can easily progress through the motions for tasks such as querying content on a distribution point or distribution point group – perhaps in a particular state (e.g. "distribution failed") – and distributing, redistributing or removing it from another (or the same) distribution point or distribution point group.
-- Consistent property names when dealing with different types of content objects, i.e. the ObjectID property is always PackageID except for Applications/Deployment Types where it is CI_ID (same is true for the -ObjectID parameter on functions that offer it).
+- Consistent property names when dealing with different types of content objects, i.e. the ObjectID property is always PackageID except for Applications/Deployment Types where it is CI_ID (same is true with the -ObjectID parameter for functions that offer it).
 - Functionality which the Configuration Manager module does not provide.
 
 ## Functions
