@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [1.8.20201016.0] - 2020-10-16
 ### Fixed
 - Create PS drive for site code and server if it does not exist upon importing the module
 
@@ -49,7 +51,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Birth of change log
 
-[Unreleased]: https://github.com/codaamok/PSCMContentMgmt/compare/1.7.20200925.0..HEAD
+[Unreleased]: https://github.com/codaamok/PSCMContentMgmt/compare/1.8.20201016.0..HEAD
+[1.8.20201016.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.7.20200925.0..1.8.20201016.0
 [1.7.20200925.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.6.20200908.0..1.7.20200925.0
 [1.6.20200908.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.5.20200903.0..1.6.20200908.0
 [1.5.20200903.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.4.20200903.0..1.5.20200903.0
