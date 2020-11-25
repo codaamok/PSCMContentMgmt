@@ -166,7 +166,7 @@ task GetVersionToBuild {
             $Script:VersionToBuild = [System.Version]::New(([System.Version]$ModuleManifest.ModuleVersion).Major, ([System.Version]$ModuleManifest.ModuleVersion).Minor, ([System.Version]$ModuleManifest.ModuleVersion).Build, ([System.Version]$ModuleManifest.ModuleVersion).Revision + 1)
         }
         else {
-            Write-Output ("Latest release version from module manifest: {0}" -f $Script:ModuleManifest.Version)
+            Write-Output ("Latest release version from module manifest: {0}" -f $Script:ModuleManifest.ModuleVersion)
             Write-Output ("Latest release version from PowerShell gallery: {0}" -f $Script:PSGalleryModuleInfo.Version)
             throw "Can not determine next version number"
         }
