@@ -1,5 +1,9 @@
 # PSCMContentMgmt
 
+| Branch | Build status | Last commit | Latest release | PowerShell Gallery | GitHub |
+|-|-|-|-|-|-|
+| `master` | ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/codaamok/PSCMContentMgmt/Publish/master) | ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/codaamok/PSCMContentMgmt/master?color=blue) | ![GitHub release (latest by date)](https://img.shields.io/github/v/release/codaamok/PSCMContentMgmt?color=blue) ![GitHub Release Date](https://img.shields.io/github/release-date/codaamok/PSCMContentMgmt?color=blue) | ![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/PSCMContentMgmt?color=blue) | ![GitHub all releases](https://img.shields.io/github/downloads/codaamok/PSCMContentMgmt/total?color=blue) |
+
 PowerShell module used for managing Microsoft Endpoint Manager Configuration Manager distribution point content.
 
 Here are some of the things you can do with it:
