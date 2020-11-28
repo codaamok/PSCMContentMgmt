@@ -107,6 +107,7 @@ function Invoke-DPContentLibraryCleanup {
             try {
                 if (Test-Path $Path -ErrorAction "Stop") {
                     $ContentLibraryCleanupExe = $Path
+                    break
                 }
             }
             catch [System.UnauthorizedAccessException] {

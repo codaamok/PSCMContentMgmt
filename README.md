@@ -21,8 +21,8 @@ PSCMContentMgmt is a mix of being no more than a wrapper for MEMCM cmdlets or na
 PSCMContentMgmt does not intend to reinvent the wheel from already available cmdlets. Instead it provides a simpler workflow for managing your distribution points by offering:
 
 - Easy to use pipeline support, so you can easily progress through the motions for tasks such as querying content on a distribution point or distribution point group – perhaps in a particular state (e.g. "distribution failed") – and distributing, redistributing or removing it from another (or the same) distribution point or distribution point group.
-- Consistent property names when dealing with different types of content objects, i.e. the ObjectID property is always PackageID except for Applications/Deployment Types where it is CI_ID.
-- Functionality which the Configuration Manager module does not provide e.g. content redistribution or import .pkgx files.
+- Consistent property names when dealing with different types of content objects, i.e. the ObjectID property is always PackageID except for Applications/Deployment Types where it is CI_ID (same is true with the -ObjectID parameter for functions that offer it).
+- Functionality which the Configuration Manager module does not provide.
 
 ## Functions
 
@@ -43,6 +43,11 @@ PSCMContentMgmt does not intend to reinvent the wheel from already available cmd
 - [Start-DPContentDistribution](docs/Start-DPContentDistribution.md)
 - [Start-DPContentRedistribution](docs/Start-DPContentRedistribution.md)
 - [Start-DPGroupContentDistribution](docs/Start-DPGroupContentDistribution.md)
+
+## Requirements
+
+- PowerShell 5.1
+- Configuration Manager module available locally on the system you import the module
 
 ## Getting started
 
@@ -189,6 +194,6 @@ PS C:\> Get-Help "Find-CMObject" -Detailed
 
 Failing that:
 
-- If you think you've experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
+- If you think you're experiencing, or have found, a bug in PSCMContentMgmt, please open an issue.
 - Ping me on Twitter ([@codaamok](https://twitter.com/codaamok))
 - Come to the [WinAdmins Discord](https://winadmins.io) and bug me there, my handle is @acc.

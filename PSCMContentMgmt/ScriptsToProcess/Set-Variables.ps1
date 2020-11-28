@@ -8,6 +8,14 @@ try {
         Write-Warning ('Could not auto-populate variable $CMSiteCode, either set this yourself or pass -SiteCode to all functions (Reason: "{0}" while querying SMS_ProviderLocation on "{1}")' -f $_.Exception.Message, $CMSiteServer)
         $CMSiteCode = $null
     }
+    try {
+        if ($null -eq (Get-PSDrive -Name $CMSiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
+            $null = New-PSDrive -Name $CMSiteCode -PSProvider "CMSite" -Root $CMSiteServer -ErrorAction "Stop"
+        }
+    }
+    catch {
+        Write-Error ('Could not create new PS drive "{0}" (Reason: "{1}")' -f $CMSiteCode, $_.Exception.Message) -Category $_.CategoryInfo.Category
+    }
 }
 catch {
     Write-Warning ('Could not auto-populate variable $CMSiteServer, either set this yourself or pass -SiteServer to all functions (Reason: "{0}" while trying to read "Server" value from key "{1}")' -f $_.Exception.Message, $RegKey)

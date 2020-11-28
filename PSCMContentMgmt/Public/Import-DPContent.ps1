@@ -95,7 +95,7 @@ function Import-DPContent {
             $Exception = [UnauthorizedAccessException]::new("Must run as administrator")
             $ErrorRecord = [System.Management.Automation.ErrorRecord]::new(
                 $Exception,
-                "2",
+                "5",
                 [System.Management.Automation.ErrorCategory]::PermissionDenied,
                 $null
             )

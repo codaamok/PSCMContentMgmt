@@ -5,12 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [1.6.20200905.1] - 2020-09-05
+## [1.8.20201016.0] - 2020-10-16
+### Fixed
+- Create PS drive for site code and server if it does not exist upon importing the module
+
+## [1.7.20200925.0] - 2020-09-25
+### Fixed
+- Corrected `Invoke-DPContentLibraryCleanup` to use correct .exe path
+
+## [1.6.20200908.0] - 2020-09-08
 ### Added
 - More properties added to the module manifest
 
 ### Changed
 - Updated various help content to better describe -ObjectID parameter and ObjectID property
+
+### Fixed
+- Corrected CIM query in `Start-DPContentRedistribution` so it actually works. Added error handling to in the event an object is not found to be already distributed to a distribution point.
+- More accurate error ID to reflect a win32 error code for access denied in `Import-DPContent`
 
 ## [1.5.20200903.0] - 2020-09-03
 ### Fixed
@@ -39,8 +51,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Birth of change log
 
-[Unreleased]: https://github.com/codaamok/PSCMContentMgmt/compare/1.6.20200905.1..HEAD
-[1.6.20200905.1]: https://github.com/codaamok/PSCMContentMgmt/compare/1.5.20200903.0..1.6.20200905.1
+[Unreleased]: https://github.com/codaamok/PSCMContentMgmt/compare/1.8.20201016.0..HEAD
+[1.8.20201016.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.7.20200925.0..1.8.20201016.0
+[1.7.20200925.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.6.20200908.0..1.7.20200925.0
+[1.6.20200908.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.5.20200903.0..1.6.20200908.0
 [1.5.20200903.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.4.20200903.0..1.5.20200903.0
 [1.4.20200903.0]: https://github.com/codaamok/PSCMContentMgmt/compare/1.3.20200821.4..1.4.20200903.0
 [1.3.20200821.4]: https://github.com/codaamok/PSCMContentMgmt/compare/1.2..1.3.20200821.4
