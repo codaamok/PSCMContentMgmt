@@ -77,7 +77,7 @@ Where any of the functions return an object with the property ObjectID, or where
 ## Examples
 
 ```powershell
-PS C:\> Get-Help "about_PSCMContentMgmt_ExportImpot"
+PS C:\> Get-Help "about_PSCMContentMgmt_ExportImport"
 ```
 
 To learn more about how to migrate distribution point content using PSCMContentMgmt, please see my [SysManSquad blog post](https://sysmansquad.com/2020/09/04/manage-distribution-point-content-using-pscmcontentmgmt/#comparing-distribution-content-objects-between-two-distribution-points-or-distribution-point-groups) or read the help topic `about_PSCMContentMgmt_ExportImport`.
