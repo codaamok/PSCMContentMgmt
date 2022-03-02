@@ -1,302 +1,169 @@
-#Requires -Module "ChangelogManagement", "PlatyPS"
+<#
+.SYNOPSIS
+    Build script which leverages the InvokeBuild module.
+.DESCRIPTION
+    Build script which leverages the InvokeBuild module.
+    This build script is used in the build pipeline and local development for building this project.
+#>
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [String]$ModuleName,
+
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [String]$ModuleName = $env:GH_PROJECTNAME,
+    [String]$Author,
 
     [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [String]$Author = $env:GH_USERNAME,
+    [String]$Version,
 
     [Parameter()]
-    [Switch]$UpdateDocs,
+    [Bool]$NewRelease = $false,
 
     [Parameter()]
-    [Switch]$NewRelease
+    [Bool]$UpdateDocs = $false
 )
 
-# Synopsis: Initiate the entire build process
-task . Clean, GetPSGalleryVersionNumber, CopyChangeLog, GetChangelog, GetReleaseNotes, GetManifestVersionNumber, GetVersionToBuild, UpdateChangeLog, GetFunctionsToExport, CreateRootModule, CopyFormatFiles, CopyLicense, CreateProcessScript, CopyAboutHelp, CopyModuleManifest, UpdateModuleManifest, CreateReleaseAsset
+# Synopsis: Initiate the build process
+task . ImportBuildModule,
+    InitaliseBuildDirectory,
+    CopyChangeLog,
+    UpdateChangeLog,
+    CreateRootModule,
+    CreateProcessScript,
+    UpdateModuleManifest,
+    CreateArchive,
+    UpdateDocs,
+    UpdateProjectRepo
 
-# Synopsis: Empty the contents of the build and release directories. If not exist, create them.
-task Clean {
-    $Paths = @(
+# Synopsis: Install dependent build modules
+task InstallDependencies {
+    $Modules = "PlatyPS","ChangelogManagement"
+    if ($Script:ModuleName -ne "codaamok.build") {
+        $Modules += "codaamok.build"
+    }
+    Install-Module -Name $Modules -Scope CurrentUser
+}
+
+# Synopsis: Set build platform specific environment variables
+task SetGitHubActionEnvironmentVariables {
+    New-BuildEnvironmentVariable -Platform "GitHubActions" -Variable @{
+        "GH_USERNAME"    = $Author
+        "GH_PROJECTNAME" = $ModuleName
+    }
+}
+
+# Synopsis: Publish module to the PowerShell Gallery
+task PublishModule {
+    Publish-Module -Path $BuildRoot\build\$ModuleName -NuGetApiKey $env:PSGALLERY_API_KEY -ErrorAction "Stop" -Force
+}
+
+# Synopsis: Import the codaamok.build module
+task ImportBuildModule {
+    if ($Script:ModuleName -eq "codaamok.build") {
+        # This is to use module for building codaamok.build itself
+        Import-Module .\src\codaamok.build.psd1
+    }
+    else {
+        Import-Module "codaamok.build"
+    }
+}
+
+# Synopsis: Create fresh build directories and initalise it with content from the project
+task InitaliseBuildDirectory {
+    Invoke-BuildClean -Path @(
         "{0}\build\{1}" -f $BuildRoot, $Script:ModuleName
         "{0}\release" -f $BuildRoot
     )
 
-    foreach ($Path in $Paths) {
-        if (Test-Path $Path) {
-            Remove-Item -Path $Path\* -Recurse -Force
-        }
-        else {
-            $null = New-Item -Path $Path -ItemType "Directory" -Force
-        }
+    if (Test-Path -Path $BuildRoot\src\* -Include "*format.ps1xml") {
+        $Script:FormatFiles = Copy-Item -Path $BuildRoot\src\* -Destination $BuildRoot\build\$Script:ModuleName -Filter "*format.ps1xml" -PassThru
     }
+
+    if (Test-Path -Path $BuildRoot\src\Files\*) {
+        $Script:FileList = Copy-Item -Path $BuildRoot\src\Files\* -Destination $BuildRoot\build\$Script:ModuleName -Recurse -Force -PassThru
+    }
+
+    Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$Script:ModuleName\LICENSE
+    Copy-Item -Path $BuildRoot\src\en-US -Destination $BuildRoot\build\$Script:ModuleName -Recurse
+    $Script:ManifestFile = Copy-Item -Path $BuildRoot\src\$Script:ModuleName.psd1 -Destination $BuildRoot\build\$Script:ModuleName\$Script:ModuleName.psd1 -PassThru
 }
 
-# Synopsis: Get current version number of module in PowerShell Gallery (if published)
-task GetPSGalleryVersionNumber {
-    try {
-        $Script:PSGalleryModuleInfo = Find-Module -Name $Script:ModuleName -ErrorAction "Stop"
-    }
-    catch {
-        if ($_.Exception.Message -notmatch "No match was found for the specified search criteria") {
-            throw $_
-        }
-    }
-
-    if (-not $Script:PSGalleryModuleInfo) {
-        $Script:PSGalleryModuleInfo = [PSCustomObject]@{
-            "Name"    = $Script:ModuleName
-            "Version" = "0.0"
-        }
-    }
-
-    Write-Output ("PowerShell Gallery verison: {0}" -f $Script:PSGalleryModuleInfo.Version)
-}
-
-# Synopsis: Copy CHANGELOG.md (must exist)
+# Synopsis: Get change log data, copy it to the build directory, and create releasenotes.txt
 task CopyChangeLog {
     Copy-Item -Path $BuildRoot\CHANGELOG.md -Destination $BuildRoot\build\$Script:ModuleName\CHANGELOG.md
+    $Script:ChangeLogData = Get-ChangeLogData -Path $BuildRoot\CHANGELOG.md
+    Export-UnreleasedNotes -Path $BuildRoot\release\releasenotes.txt -ChangeLogData $Script:ChangeLogData -NewRelease $Script:NewRelease
 }
 
-# Synopsis: Get change log
-task GetChangelog {
-    $Script:ChangeLog = Get-ChangeLogData -Path $BuildRoot\CHANGELOG.md
-    Write-Output ("Last released version: {0}" -f $Script:ChangeLog.Released[0].Version)
-}
-
-# Synopsis: Read change log for Unreleased release notes and create releasenotes.txt in release directory
-task GetReleaseNotes {
-    $EmptyChangeLog = $true
-
-    $Script:ReleaseNotes = foreach ($Property in $Script:ChangeLog.Unreleased[0].Data.PSObject.Properties.Name) {
-        $Data = $Script:ChangeLog.Unreleased[0].Data.$Property
-
-        if ($Data) {
-            $EmptyChangeLog = $false
-
-            Write-Output ("# {0}" -f $Property)
-
-            foreach ($item in $Data) {
-                Write-Output ("- {0}" -f $item)
-            }
-        }
-    }
-
-    if ($EmptyChangeLog -eq $true -Or $Script:ReleaseNotes.Count -eq 0) {
-        if ($NewRelease.IsPresent) {
-            throw "Can not build with empty Unreleased section in the change log"
-        }
-        else {
-            $Script:ReleaseNotes = "None"
-        }
-    }
-
-    Write-Output "Release notes:"
-    Write-Output $Script:ReleaseNotes
-
-    Set-Content -Value $Script:ReleaseNotes -Path $BuildRoot\release\releasenotes.txt -Force
-}
-
-# Synopsis: Get current version number of module in the manifest file
-task GetManifestVersionNumber {
-    $Script:ModuleManifest = Import-PowerShellDataFile -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1
-}
-
-# Synopsis: Determine version number to build blish with by evaluating versions in PowerShell Gallery and in the change log
-task GetVersionToBuild {
-    if ($NewRelease.IsPresent) {
-        $Date = Get-Date -Format 'yyyyMMdd'
-
-        # If the last released version in the change log and latest version available in the PowerShell gallery don't match, throw an exception - get them level!
-        if ($null -ne $Script:ChangeLog.Released[0].Version -And $Script:ChangeLog.Released[0].Version -ne $Script:PSGalleryModuleInfo.Version) {
-            throw "The latest released version in the changelog does not match the latest released version in the PowerShell gallery"
-        }
-        # If module isn't yet published in the PowerShell gallery, and there's no Released section in the change log, set initial version
-        elseif ($Script:PSGalleryModuleInfo.Version -eq "0.0" -And $Script:ChangeLog.Released.Count -eq 0) {
-            $Script:VersionToBuild = [System.Version]::New(1, 0, $Date, 0)
-        }
-        # If module isn't yet published in the PowerShell gallery, and there is a Released section in the change log, update version
-        elseif ($Script:PSGalleryModuleInfo.Version -eq "0.0" -And $Script:ChangeLog.Released.Count -ge 1) {
-            $CurrentVersion        = [System.Version]$Script:ChangeLog.Released[0].Version
-            $Script:VersionToBuild = [System.Version]::New($CurrentVersion.Major, $CurrentVersion.Minor + 1, $Date, 0)
-        }
-        # If the last Released verison in the change log and currently latest verison in the PowerShell gallery are in harmony, update version
-        elseif ($Script:ChangeLog.Released[0].Version -eq $Script:PSGalleryModuleInfo.Version) {
-            $CurrentVersion        = [System.Version]$Script:PSGalleryModuleInfo.Version
-            $Script:VersionToBuild = [System.Version]::New($CurrentVersion.Major, $CurrentVersion.Minor + 1, $Date, 0)
-        }
-        else {
-            Write-Output ("Latest release version from change log: {0}" -f $Script:ChangeLog.Released[0].Version)
-            Write-Output ("Latest release version from PowerShell gallery: {0}" -f $Script:PSGalleryModuleInfo.Version)
-            throw "Can not determine next version number"
-        }
-    
-        # Suss out unlisted packages
-        for ($i = $Script:VersionToBuild.Revision; $i -le 100; $i++) {
-            if ($i -eq 100) {
-                throw "You have 100 unlisted packages under the same build number? Sort your life out."
-            }
-    
-            try {
-                $Script:PSGalleryModuleInfo = Find-Module -Name $Script:ModuleName -RequiredVersion $Script:VersionToBuild
-                if ($Script:PSGalleryModuleInfo) {
-                    $Script:VersionToBuild = [System.Version]::New($Script:VersionToBuild.Major, $Script:VersionToBuild.Minor, $Script:VersionToBuild.Build, $i)
-                }
-                else {
-                    throw "Unusual no object or exception caught from Find-Module"
-                }
-            }
-            catch {
-                if ($_.Exception.Message -match "No match was found for the specified search criteria") {
-                    # Found next available version to use
-                    break
-                }
-                else {
-                    throw $_
-                }
-            }
-        }
-    }
-    else {
-        if ($Script:PSGalleryModuleInfo.Version -eq "0.0" -Or $Script:ChangeLog.Released[0].Version -eq $ModuleManifest.ModuleVersion) {
-            $Script:VersionToBuild = [System.Version]::New(([System.Version]$ModuleManifest.ModuleVersion).Major, ([System.Version]$ModuleManifest.ModuleVersion).Minor, ([System.Version]$ModuleManifest.ModuleVersion).Build, ([System.Version]$ModuleManifest.ModuleVersion).Revision + 1)
-        }
-        else {
-            Write-Output ("Latest release version from module manifest: {0}" -f $Script:ModuleManifest.ModuleVersion)
-            Write-Output ("Latest release version from PowerShell gallery: {0}" -f $Script:PSGalleryModuleInfo.Version)
-            throw "Can not determine next version number"
-        }
-    }
-
-    Write-Output ("Version to build: {0}" -f $Script:VersionToBuild)
-    Write-Output ("::set-env name=VersionToBuild::{0}" -f $Script:VersionToBuild)
-}
-
-# Synopsis: Update CHANGELOG.md if building a new release (-NewRelease switch parameter)
-task UpdateChangeLog -If ($NewRelease.IsPresent) {
+# Synopsis: Update CHANGELOG.md (if building a new release with -NewRelease)
+task UpdateChangeLog -If ($Script:NewRelease) {
     $LinkPattern   = @{
         FirstRelease  = "https://github.com/{0}/{1}/tree/{{CUR}}" -f $Script:Author, $Script:ModuleName
         NormalRelease = "https://github.com/{0}/{1}/compare/{{PREV}}..{{CUR}}" -f $Script:Author, $Script:ModuleName
         Unreleased    = "https://github.com/{0}/{1}/compare/{{CUR}}..HEAD" -f $Script:Author, $Script:ModuleName
     }
 
-    Update-Changelog -Path $BuildRoot\build\$Script:ModuleName\CHANGELOG.md -ReleaseVersion $Script:VersionToBuild -LinkMode Automatic -LinkPattern $LinkPattern
-}
-
-# Synopsis: Gather all exported functions to populate manifest with
-task GetFunctionsToExport {
-    $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\Public -Filter *.ps1)
-
-    $Script:FunctionsToExport = foreach ($File in $Files) {
-        try {
-            $tokens = $errors = @()
-            $Ast = [System.Management.Automation.Language.Parser]::ParseFile(
-                $File.FullName,
-                [ref]$tokens,
-                [ref]$errors
-            )
-
-            if ($errors[0].ErrorId -eq 'FileReadError') {
-                throw [InvalidOperationException]::new($errors[0].Message)
-            }
-
-            Write-Output $Ast.EndBlock.Statements.Name
-        }
-        catch {
-            Write-Error -Exception $_.Exception -Category "OperationStopped"
-        }
-    }
+    Update-Changelog -Path $BuildRoot\build\$Script:ModuleName\CHANGELOG.md -ReleaseVersion $Script:Version -LinkMode Automatic -LinkPattern $LinkPattern
 }
 
 # Synopsis: Creates a single .psm1 file of all private and public functions of the to-be-built module
 task CreateRootModule {
-    $RootModule = New-Item -Path $BuildRoot\build\$Script:ModuleName\$Script:ModuleName.psm1 -ItemType "File" -Force
-
-    foreach ($FunctionType in "Private","Public") {
-        '#region {0} functions' -f $FunctionType | Add-Content -Path $RootModule
-
-        $Files = @(Get-ChildItem $BuildRoot\$Script:ModuleName\$FunctionType -Filter *.ps1)
-
-        foreach ($File in $Files) {
-            Get-Content -Path $File.FullName | Add-Content -Path $RootModule
-
-            # Add new line only if the current file isn't the last one (minus 1 because array indexes from 0)
-            if ($Files.IndexOf($File) -ne ($Files.Count - 1)) {
-                Write-Output "" | Add-Content -Path $RootModule
-            }
-        }
-
-        '#endregion' -f $FunctionType | Add-Content -Path $RootModule
-        Write-Output "" | Add-Content -Path $RootModule
-    }
+    $Script:RootModule = "{0}\build\{1}\{1}.psm1" -f $BuildRoot, $Script:ModuleName
+    $DevModulePath = "{0}\src" -f $BuildRoot
+    Export-RootModule -DevModulePath $DevModulePath -RootModule $Script:RootModule
 }
 
 # Synopsis: Create a single Process.ps1 script file for all script files under ScriptsToProcess\* (if any)
-task CreateProcessScript {
-    $ScriptsToProcessFolder = "{0}\{1}\ScriptsToProcess" -f $BuildRoot, $Script:ModuleName
-
-    if (Test-Path $ScriptsToProcessFolder) {
-        $Script:ProcessFile = New-Item -Path $BuildRoot\build\$Script:ModuleName\Process.ps1 -ItemType "File" -Force
-        $Files = @(Get-ChildItem $ScriptsToProcessFolder -Filter *.ps1)
-    }
-
-    foreach ($File in $Files) {
-        Get-Content -Path $File.FullName | Add-Content -Path $Script:ProcessFile
-
-        # Add new line only if the current file isn't the last one (minus 1 because array indexes from 0)
-        if ($Files.IndexOf($File) -ne ($Files.Count - 1)) {
-            Write-Output "" | Add-Content -Path $Script:ProcessFile
-        }
-    }
+$Params = @{
+    Path    = "{0}\src\ScriptsToProcess\*" -f $BuildRoot
+    Include = "*.ps1"
 }
 
-# Synopsis: Copy format files (if any)
-task CopyFormatFiles {
-    $Script:FormatFiles = Get-ChildItem $BuildRoot\$Script:ModuleName -Filter "*format.ps1xml" | Copy-Item -Destination $BuildRoot\build\$Script:ModuleName
+task CreateProcessScript -If (Test-Path @Params) {
+    $Path = "{0}\build\{1}\Process.ps1" -f $BuildRoot, $Script:ModuleName
+    Export-ScriptsToProcess -File (Get-ChildItem @Params) -Path $Path
+    $Script:ProcessScript = $true
 }
 
-# Synopsis: Copy LICENSE file (must exist)
-task CopyLicense {
-    Copy-Item -Path $BuildRoot\LICENSE -Destination $BuildRoot\build\$Script:ModuleName\LICENSE
-}
-
-# Synopsis: Copy "About" help files (must exist)
-task CopyAboutHelp {
-    Copy-Item -Path $BuildRoot\$Script:ModuleName\en-US -Destination $BuildRoot\build\$Script:ModuleName -Recurse
-}
-
-# Synopsis: Copy module manifest files (must exist)
-task CopyModuleManifest {
-    $Script:ManifestFile = Copy-Item -Path $BuildRoot\$Script:ModuleName\$Script:ModuleName.psd1 -Destination $BuildRoot\build\$Script:ModuleName\$Script:ModuleName.psd1 -PassThru
-}
-
-# Synopsis: Update the manifest in build directory. If successful, replace manifest in the module directory
-task UpdateModuleManifest {  
+# Synopsis: Update the module manifest in the build directory
+task UpdateModuleManifest {
     $UpdateModuleManifestSplat = @{
-        Path = $Script:ManifestFile
+        Path              = $Script:ManifestFile
+        RootModule        = (Split-Path $Script:RootModule -Leaf)
+        FunctionsToExport = Get-PublicFunctions -Path $BuildRoot\src\Public
+        ReleaseNotes      = (Get-Content $BuildRoot\release\releasenotes.txt) -replace '`'
     }
 
-    $UpdateModuleManifestSplat["ModuleVersion"] = $Script:VersionToBuild
-
-    $UpdateModuleManifestSplat["ReleaseNotes"] = $Script:ReleaseNotes
+    # Build with pre-release data from the branch if the -Version parameter is not passed (for local development and testing)
+    if ($Script:Version) {
+        $UpdateModuleManifestSplat["ModuleVersion"] = $Script:Version
+    }
+    else {
+        $GitVersion = (gitversion | ConvertFrom-Json)
+        $UpdateModuleManifestSplat["ModuleVersion"] = $GitVersion.MajorMinorPatch
+        $UpdateModuleManifestSplat["Prerelease"] = $GitVersion.NuGetPreReleaseTag
+    }
 
     if ($Script:FormatFiles) {
         $UpdateModuleManifestSplat["FormatsToProcess"] = $Script:FormatFiles.Name
     }
 
-    if ($Script:ProcessFile) {
+    if ($Script:FileList) {
         # Use this instead of Updatet-ModuleManifest due to https://github.com/PowerShell/PowerShellGet/issues/196
-        (Get-Content -Path $Script:ManifestFile.FullName) -replace '(#? ?ScriptsToProcess.+)', ('ScriptsToProcess = "{0}"' -f $Script:ProcessFile.Name) | Set-Content -Path $ManifestFile
+        $Regex = '^# FileList = @\(\)$'
+        $ReplaceStr = 'FileList = "{0}"' -f [String]::Join('", "', $Script:FileList.Name)
+        (Get-Content -Path $Script:ManifestFile.FullName) -replace $Regex, $ReplaceStr | Set-Content -Path $Script:ManifestFile
     }
 
-    if ($Script:FunctionsToExport) {
-        $UpdateModuleManifestSplat["FunctionsToExport"] = $Script:FunctionsToExport
+    if ($Script:ProcessScript) {
+        # Use this instead of Updatet-ModuleManifest due to https://github.com/PowerShell/PowerShellGet/issues/196
+        $Regex = '(#? ?ScriptsToProcess.+)'
+        $ReplaceStr = 'ScriptsToProcess = "Process.ps1"'
+        (Get-Content -Path $Script:ManifestFile.FullName) -replace $Regex, $ReplaceStr | Set-Content -Path $Script:ManifestFile
     }
-    
+
     Update-ModuleManifest @UpdateModuleManifestSplat
 
     # Arguably a moot point as Update-MooduleManifest obviously does some testing to ensure a valid manifest is there first before updating it
@@ -304,14 +171,32 @@ task UpdateModuleManifest {
     $null = Test-ModuleManifest -Path $Script:ManifestFile
 }
 
-# Synopsis: Create release asset (archived module)
-task CreateReleaseAsset {
-    $ReleaseAsset = "{0}_{1}.zip" -f $Script:ModuleName, $Script:VersionToBuild
+# Synopsis: Create archive of the module
+task CreateArchive {
+    $ReleaseAsset = "{0}_{1}.zip" -f $Script:ModuleName, $Script:Version
     Compress-Archive -Path $BuildRoot\build\$Script:ModuleName\* -DestinationPath $BuildRoot\release\$ReleaseAsset -Force
 }
 
 # Synopsis: Update documentation (-NewRelease or -UpdateDocs switch parameter)
-#task UpdateDocs -If ($NewRelease.IsPresent -Or $UpdateDocs.IsPresent) {
-#    Import-Module -Name $BuildRoot\build\$Script:ModuleName -Force
-#    New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs -Force
-#}
+task UpdateDocs -If ($NewRelease -Or $UpdateDocs) {
+    Import-Module -Name $BuildRoot\build\$Script:ModuleName -Force
+    New-MarkdownHelp -Module $Script:ModuleName -OutputFolder $BuildRoot\docs -Force
+}
+
+# Synopsis: Update the project's repository with files updated by the pipeline e.g. module manifest
+task UpdateProjectRepo -If ($NewRelease) {
+    Copy-Item -Path $BuildRoot\build\$Script:ModuleName\CHANGELOG.md -Destination $BuildRoot\CHANGELOG.md
+
+    $ManifestData = Import-PowerShellDataFile -Path $Script:ManifestFile
+
+    # Instead of copying the manifest from the .\build directory, update it in place
+    # This enables me to keep FunctionsToExport = '*' for development. Therefore instead only update the important bits e.g. version and release notes    
+    $UpdateModuleManifestSplat = @{
+        Path          = "{0}\src\{1}.psd1" -f $BuildRoot, $Script:ModuleName
+        ModuleVersion = $ManifestData.ModuleVersion
+        ReleaseNotes  = $ManifestData.PrivateData.PSData.ReleaseNotes
+    }
+    Update-ModuleManifest @UpdateModuleManifestSplat
+    
+    $null = Test-ModuleManifest -Path ("{0}\src\{1}.psd1" -f $BuildRoot, $Script:ModuleName)
+}
