@@ -73,7 +73,7 @@ task ImportBuildModule {
 # Synopsis: Create fresh build directories and initalise it with content from the project
 task InitaliseBuildDirectory {
     Invoke-BuildClean -Path @(
-        "{0}\build\{1}" -f $BuildRoot, $Script:ModuleName
+        "{0}\build\{1}\*" -f $BuildRoot, $Script:ModuleName
         "{0}\release" -f $BuildRoot
     )
 
