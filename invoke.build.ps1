@@ -73,8 +73,9 @@ task ImportBuildModule {
 # Synopsis: Create fresh build directories and initalise it with content from the project
 task InitaliseBuildDirectory {
     Invoke-BuildClean -Path @(
-        "{0}\build\{1}\*" -f $BuildRoot, $Script:ModuleName
-        "{0}\release\*" -f $BuildRoot
+        "{0}\build" -f $BuildRoot
+        "{0}\build\{1}" -f $BuildRoot, $Script:ModuleName
+        "{0}\release" -f $BuildRoot
     )
 
     if (Test-Path -Path $BuildRoot\src\* -Include "*format.ps1xml") {
