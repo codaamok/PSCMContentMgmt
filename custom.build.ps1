@@ -24,7 +24,14 @@ param (
 )
 
 task PreBuild {
-
+    New-Item -Path $BuildRoot\build\$ModuleName\ConfigurationManager\ConfigurationManager.psm1 -ItemType File -Force
+    $Params = @(
+        Path = $BuildRoot\build\ConfigurationManager\ConfigurationManager.psd1
+        Guid = (New-Guid).Guid
+        RootModule = $BuildRoot\build\ConfigurationManager\ConfigurationManager.psm1
+    )
+    New-ModuleManifest @Params
+    Import-Module -Name $BuildRoot\build\ConfigurationManager\ConfigurationManager.psd1
 }
 
 task PostBuild {
