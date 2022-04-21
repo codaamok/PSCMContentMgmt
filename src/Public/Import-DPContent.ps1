@@ -31,16 +31,14 @@ function Import-DPContent {
         The function attempts to discover the location of this exe, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
     .PARAMETER ImportAllFromFolder
         Import all .pkgx files found -Folder regardless as to whether the content object is currently in pending state or not.
-    .PARAMETER SiteServer       
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+    .PARAMETER SiteServer
+        FQDN address of the site server (SMS Provider). 
         
-        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
-        
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-        
-        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         This function does not accept pipeline input.
     .OUTPUTS
@@ -84,12 +82,11 @@ function Import-DPContent {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
-    )
+        [String]$SiteCode    )
     begin {
         if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator") -eq $false) {
             $Exception = [UnauthorizedAccessException]::new("Must run as administrator")
@@ -102,19 +99,12 @@ function Import-DPContent {
             $PSCmdlet.ThrowTerminatingError($ErrorRecord)
         }
 
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-        }
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
 
         $DistributionPoint = [System.Net.Dns]::GetHostByName($env:ComputerName).HostName        
 
         try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DP -Name $DistributionPoint -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -159,9 +149,9 @@ function Import-DPContent {
                 $Files = Get-ChildItem -Path $Folder -Filter "*.pkgx" -ErrorAction "Stop"
             }
             else {
-                $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+                $Namespace = "ROOT/SMS/Site_{0}" -f $Script:SiteCode
                 $Filter = "ServerNALPath like '%{0}%'" -f $DistributionPoint
-                $ObjPackagesPending = (Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -ClassName "SMS_PackageStatusDistPointsSummarizer" -Filter $Filter -ErrorAction "Stop").Where{ $_.State -ne 0 }
+                $ObjPackagesPending = (Get-CimInstance -ComputerName $Script:SiteServer -Namespace $Namespace -ClassName "SMS_PackageStatusDistPointsSummarizer" -Filter $Filter -ErrorAction "Stop").Where{ $_.State -ne 0 }
             }
         }
         catch {
@@ -211,7 +201,7 @@ function Import-DPContent {
                 $ObjectType = ([SMS_DPContentInfo]([SMS_PackageStatusDistPointsSummarizer_PackageType]$ObjPackage.PackageType).ToString()).value__
     
                 if ($ObjectType -eq [SMS_DPContentInfo]"Application") {
-                    $ObjectID = ConvertTo-PackageIDCIID -PackageID $ObjPackage.PackageID -SiteServer $SiteServer -SiteCode $SiteCode
+                    $ObjectID = ConvertTo-PackageIDCIID -PackageID $ObjPackage.PackageID -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
                 }
                 else {
                     $ObjectID = $ObjPackage.PackageID

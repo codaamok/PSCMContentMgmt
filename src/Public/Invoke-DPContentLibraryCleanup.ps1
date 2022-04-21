@@ -16,16 +16,14 @@ function Invoke-DPContentLibraryCleanup {
         The function attempts to discover the location of this exe, however if it is unable to find it you will receive a terminating error and asked to use this parameter.
     .PARAMETER Delete
         Deletes orphaned content.
-    .PARAMETER SiteServer        
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+    .PARAMETER SiteServer
+        FQDN address of the site server (SMS Provider). 
         
-        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
-        
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-        
-        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         This function does not accept pipeline input.
     .OUTPUTS
@@ -61,11 +59,11 @@ function Invoke-DPContentLibraryCleanup {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
+        [String]$SiteCode
     )
     begin {
         if ($DistributionPoint.StartsWith($env:ComputerName)) {
@@ -81,25 +79,27 @@ function Invoke-DPContentLibraryCleanup {
             }
         }
 
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
+
         try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DP -Name $DistributionPoint -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
 
-        $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
-        $Query = "SELECT InstallDir FROM SMS_Site WHERE SiteCode = '{0}'" -f $SiteCode
+        $Namespace = "ROOT/SMS/Site_{0}" -f $Script:SiteCode
+        $Query = "SELECT InstallDir FROM SMS_Site WHERE SiteCode = '{0}'" -f $Script:SiteCode
 
         try {
-            $SiteInstallPath = (Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop").InstallDir
+            $SiteInstallPath = (Get-CimInstance -ComputerName $Script:SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop").InstallDir
         }
         catch {
             Write-Error -ErrorRecord $_
         }
 
         $Paths = @(
-            "\\{0}\SMS_{1}\cd.latest\SMSSETUP\TOOLS\ContentLibraryCleanup\ContentLibraryCleanup.exe" -f $SiteServer, $SiteCode
+            "\\{0}\SMS_{1}\cd.latest\SMSSETUP\TOOLS\ContentLibraryCleanup\ContentLibraryCleanup.exe" -f $Script:SiteServer, $Script:SiteCode
             "{0}\cd.latest\SMSSETUP\TOOLS\ContentLibraryCleanup\ContentLibraryCleanup.exe" -f $SiteInstallPath
         )
         

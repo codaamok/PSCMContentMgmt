@@ -23,15 +23,13 @@ function Start-DPContentRedistribution {
 
         When using this parameter you must also use ObjectID.
     .PARAMETER SiteServer
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+        FQDN address of the site server (SMS Provider). 
         
-        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
-        
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-        
-        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         System.Management.Automation.PSObject
     .OUTPUTS
@@ -67,21 +65,14 @@ function Start-DPContentRedistribution {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
+        [String]$SiteCode
     )
     begin {
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-        }
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
 
         $TargetDP = $DistributionPoint
 
@@ -101,7 +92,7 @@ function Start-DPContentRedistribution {
                 }
                 ($LastDP -ne $TargetDP) {
                     try {
-                        Resolve-DP -Name $TargetDP -SiteServer $SiteServer -SiteCode $SiteCode
+                        Resolve-DP -Name $TargetDP -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
                     }
                     catch {
                         Write-Error -ErrorRecord $_
@@ -123,7 +114,7 @@ function Start-DPContentRedistribution {
                 $ObjectIDToProcess = $Object.ObjectID
             }
 
-            $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+            $Namespace = "ROOT/SMS/Site_{0}" -f $Script:SiteCode
             $Query = "SELECT * FROM SMS_DistributionPoint WHERE PackageID='{0}' AND ServerNALPath LIKE '%{1}%'" -f $ObjectIDToProcess, $TargetDP
 
             $result = @{
@@ -134,7 +125,7 @@ function Start-DPContentRedistribution {
             }
             
             try {
-                $CimObj = Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop"
+                $CimObj = Get-CimInstance -ComputerName $Script:SiteServer -Namespace $Namespace -Query $Query -ErrorAction "Stop"
 
                 if ($CimObj -isnot [Microsoft.Management.Infrastructure.CimInstance] -Or $null -eq $CimObj) {
                     $Message = "Object '{0}' does not exist on '{1}' to initiate redistribution" -f $Object.ObjectID, $TargetDP
@@ -154,7 +145,7 @@ function Start-DPContentRedistribution {
                         ("Would redistribute '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP),
                         "Are you sure you want to continue?",
                         ("Redistributing '{0}' ({1}) to '{2}'" -f $Object.ObjectID, $Object.ObjectType, $TargetDP))) {
-                            Set-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query -Property @{ RefreshNow = $true } -ErrorAction "Stop"
+                            Set-CimInstance -ComputerName $Script:SiteServer -Namespace $Namespace -Query $Query -Property @{ RefreshNow = $true } -ErrorAction "Stop"
                             $result["Result"] = "Success"
                     }
                     else {

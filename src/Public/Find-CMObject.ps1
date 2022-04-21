@@ -20,6 +20,16 @@ function Find-CMOBject {
             - User Collections
             - Device Collections
             - (Software Update) Deployment Packages
+    .PARAMETER ID
+        The ID to search for.
+    .PARAMETER SiteServer
+        FQDN address of the site server (SMS Provider). 
+        
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
+    .PARAMETER SiteCode
+        Site code of which the server specified by -SiteServer belongs to.
+
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         This function does not accept pipeline input.
     .OUTPUTS
@@ -62,25 +72,18 @@ function Find-CMOBject {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
+        [String]$SiteCode
     )
     begin {
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-        }
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
 
         $GetCimInstanceSplat = @{
-            ComputerName    = $SiteServer
-            Namespace       = "ROOT/SMS/Site_{0}" -f $SiteCode 
+            ComputerName    = $Script:SiteServer
+            Namespace       = "ROOT/SMS/Site_{0}" -f $Script:SiteCode
         }
     }
     process {
@@ -107,7 +110,7 @@ function Find-CMOBject {
                 $r = Find-CMDriver -CI_ID $_ -CimParams $GetCimInstanceSplat
                 if ($r -is [Object]) { $r; continue parent }
             }
-            ("^({0}|SMS)(\w){{5}}$" -f $SiteCode) { # PackageID (or IDs of similar structure, e.g. collections) for each of the objects listed in the $Classes array below
+            ("^({0}|SMS)(\w){{5}}$" -f $Script:SiteCode) { # PackageID (or IDs of similar structure, e.g. collections) for each of the objects listed in the $Classes array below
                 $ObjectId = $_
 
                 $Classes = @(

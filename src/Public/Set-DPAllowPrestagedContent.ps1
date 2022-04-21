@@ -13,15 +13,13 @@ function Set-DPAllowPrestagedContent {
 
         This is the equivilant of checking the box in the distribution point's properties for "Enables this distribution point for prestaged content". Checked = $true, unchecked = $false.
     .PARAMETER SiteServer
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+        FQDN address of the site server (SMS Provider). 
         
-        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
-        
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-        
-        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         This function does not accept pipeline input.
     .OUTPUTS
@@ -43,24 +41,16 @@ function Set-DPAllowPrestagedContent {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
-    )
+        [String]$SiteCode    )
     begin {
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-        }
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
 
         try {
-            Resolve-DP -Name $DistributionPoint -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DP -Name $DistributionPoint -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -73,11 +63,11 @@ function Set-DPAllowPrestagedContent {
 
         $OriginalLocation = (Get-Location).Path
 
-        if($null -eq (Get-PSDrive -Name $SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
-            $null = New-PSDrive -Name $SiteCode -PSProvider "CMSite" -Root $SiteServer -ErrorAction "Stop"
+        if($null -eq (Get-PSDrive -Name $Script:SiteCode -PSProvider "CMSite" -ErrorAction "SilentlyContinue")) {
+            $null = New-PSDrive -Name $Script:SiteCode -PSProvider "CMSite" -Root $Script:SiteServer -ErrorAction "Stop"
         }
 
-        Set-Location ("{0}:\" -f $SiteCode) -ErrorAction "Stop"
+        Set-Location ("{0}:\" -f $Script:SiteCode) -ErrorAction "Stop"
     }
     process {
         try {

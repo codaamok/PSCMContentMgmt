@@ -6,7 +6,7 @@
         {
             "label": "Build",
             "type": "process",
-            "command": "pwsh",
+            "command": "powershell",
             "args": ["-noprofile","-command","Invoke-Build","-File","./invoke.build.ps1","-Author","'codaamok'","-ModuleName","'PSCMContentMgmt'"],
             "group": "build",
             "presentation": {
@@ -22,7 +22,7 @@
         {
             "label": "Build (with docs)",
             "type": "process",
-            "command": "pwsh",
+            "command": "powershell",
             "args": ["-noprofile","-command","Invoke-Build","-File","./invoke.build.ps1","-Author","'codaamok'","-ModuleName","'PSCMContentMgmt'","-UpdateDocs"],
             "group": {
                 "kind": "build",

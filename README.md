@@ -47,45 +47,46 @@ PSCMContentMgmt does not intend to reinvent the wheel from already available cmd
 ## Requirements
 
 - PowerShell 5.1
-- Configuration Manager module available locally on the system you import the module
+- [Configuration Manager PowerShell module](https://docs.microsoft.com/en-us/powershell/sccm/overview?view=sccm-ps)
 
 ## Getting started
 
 Install and import:
 
 ```powershell
-PS C:\> Install-Module PSCMContentMgmt -Scope CurrentUser
-PS C:\> Import-Module PSCMContentMgmt
+Install-Module PSCMContentMgmt -Scope CurrentUser
+Import-Module PSCMContentMgmt
 ```
 
-All functions of the module require use of `-SiteServer` or `-SiteCode` parameters. This can be tedious to repeatedly type out. Therefore upon importing the module, two variables will be set in your session:
+Each function will have two parameters to communicate to your environment with:
 
-- `$CMSiteServer`
-  - Value determined by reading the `Server` registry value in key `HKLM:\SOFTWARE\WOW6432Node\Microsoft\ConfigMgr10\AdminUI\Connection`.
-  - This registry key is used by the Configuration Manager module, therefore it is assumed this is the site you want to work in.
-- `$CMSiteCode`
-  - Value determined by reading the `SiteCode` property in the `SMS_ProviderLocation` WMI class on the server defined in `$CMSiteServer`.
+- `-SiteServer`: the FQDN server address of your site server (SMS Provider)
+- `-SiteCode`: the site code of the environment
 
-Ovewritting these variables is OK and essential if you operate in a multi-site environment.
+Using these parameters once for any function of PSCMContentMgmt enables you to not specify them again. These values are held in memory for as long as the PowerShell session exists. 
 
-If you receive a warning along the lines of being unable to auto-populate variables `$CMSiteServer` or `$CMSiteCode`, that means the module failed to read the previously mentioned registry value or the `SMS_ProviderLocation` class on your site server.
+In other words, if you used `Get-DP` and passed the parameters `-SiteServer` and `-SiteCode`, you do not need to specify them again in subsequent uses of `Get-DP`, and any other function of PSCMContentMgmt.
 
-If the reason why the module could not set these variables itself is not known, or there's no viable workaround for you, then you can set `$CMSiteServer` or `$CMSiteCode` yourself. Alternatively you can use the `-SiteServer` and `-SiteCode` parameters on an ad-hoc basis.
+If the first function you use after importing PSCMContentMgmt requires `-SiteServer` and `-SiteCode` and you have not passed the parameters, you will be prompted for them.
+
+If you want to change the values of `-SiteServer` or `-SiteCode`, pass those parameters again for any function and those new values will be used for subsequent calls.
+
+This is intended to provide a fluid user experience where you need not to repeatedly specify these required parameters while using the module interactively. You will notice using `Get-Help` on any functions of PSCMContentMgmt will indicate these parameters are not mandatory. However the user experience will indicate otherwise. This design choice, which favours user experience, does sacrifice the discoverability of these parameter's mandatory requirement.
 
 Where any of the functions return an object with the property ObjectID, or where a parameter is named -ObjectID, it will always be the PackageID for all content objects (Packages, Driver Packages, Boot Images etc) except for Applications/Deployment Types where it is CI_ID. This enables you to have a property ready to use for Applications with any of the cmdlets from the Configuration Manager module.
 
 ## Examples
 
 ```powershell
-PS C:\> Get-Help "about_PSCMContentMgmt_ExportImport"
+Get-Help "about_PSCMContentMgmt_ExportImport"
 ```
 
-To learn more about how to migrate distribution point content using PSCMContentMgmt, please see my [SysManSquad blog post](https://sysmansquad.com/2020/09/04/manage-distribution-point-content-using-pscmcontentmgmt/#comparing-distribution-content-objects-between-two-distribution-points-or-distribution-point-groups) or read the help topic `about_PSCMContentMgmt_ExportImport`.
+To learn more about how to migrate distribution point content using PSCMContentMgmt, please see my [SysManSquad blog post](https://sysmansquad.com/2020/09/04/manage-distribution-point-content-using-pscmcontentmgmt/#comparing-distribution-content-objects-between-two-distribution-points-or-distribution-point-groups) or read the help topic `Get-Help about_PSCMContentMgmt_ExportImport`.
 
 ___
 
 ```powershell
-PS C:\> Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
+Get-DP -Name "SERVERA%", "SERVERB%" -Exclude "%CMG%"
 ```
 
 Return distribution points which have a ServerName property starting with `SERVERA` or `SERVERB`, but excluding any that match `CMG` anywhere in its name.
@@ -93,7 +94,7 @@ Return distribution points which have a ServerName property starting with `SERVE
 ___
 
 ```powershell
-PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
+Get-DP | Get-DPDistributionStatus -DistributionFailed | Group-Object -Property DistributionPoint
 ```
 
 Return all distribution points, their associated failed distribution tasks and group the results by distribution point now for an overview.
@@ -101,7 +102,7 @@ Return all distribution points, their associated failed distribution tasks and g
 ___
 
 ```powershell
-PS C:\> Get-DP | Get-DPDistributionStatus -DistributionFailed | Start-DPContentRedistribution
+Get-DP | Get-DPDistributionStatus -DistributionFailed | Start-DPContentRedistribution
 ```
 
 Return all distribution points, their associated failed distribution tasks and initiate redistribution for them.
@@ -109,7 +110,7 @@ Return all distribution points, their associated failed distribution tasks and i
 ___
 
 ```powershell
-PS C:\> Get-DP -Name "London%" | Get-DPContent
+Get-DP -Name "London%" | Get-DPContent
 ```
 
 Return all content objects found on distribution points where their ServerName starts with "London".
@@ -118,7 +119,7 @@ _Note: the same is available for groups with Get-DPGroup and `Get-DPGroupContent
 ___
 
 ```powershell
-PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com"
+Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com"
 ```
 
 Return objects which are on dp1.contoso.com but not on dp2.contoso.com.
@@ -128,7 +129,7 @@ _Note: the same is available for groups with `Compare-DPGroupContent`._
 ___
 
 ```powershell
-PS C:\> Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | Start-DPContentDistribution -DistributionPoint "dp2.contoso.com"
+Compare-DPContent -Source "dp1.contoso.com" -Target "dp2.contoso.com" | Start-DPContentDistribution -DistributionPoint "dp2.contoso.com"
 ```
 
 Distribute the missing objects to dp2.contoso.com.
@@ -138,7 +139,7 @@ _Note: the same is available for groups with `Start-DPGroupContentDistribution`.
 ___
 
 ```powershell
-PS C:\> Get-DPContent -DistributionPoint "dp1.contoso.com" -Package | Remove-DPContent
+Get-DPContent -DistributionPoint "dp1.contoso.com" -Package | Remove-DPContent
 ```
 
 Remove all Packages from a distribution point.
@@ -148,7 +149,7 @@ _Note: the same is available for groups with `Get-DPGroupContent` and `Remove-DP
 ___
 
 ```powershell
-PS C:\> Invoke-DPContentLibraryCleanup -DistributionPoint "dp1.contoso.com" -Delete
+Invoke-DPContentLibraryCleanup -DistributionPoint "dp1.contoso.com" -Delete
 ```
 
 Invoke the ContentLibraryCleanup.exe tool.
@@ -156,7 +157,7 @@ Invoke the ContentLibraryCleanup.exe tool.
 ___
 
 ```powershell
-PS C:\> Find-CMObject -ID "ACC00048"
+Find-CMObject -ID "ACC00048"
 ```
 Finds any object which has the PackageID "ACC00048", this includes applications, collections, driver packages, boot images, OS images, OS upgrade images, task sequences and deployment packages.
 
@@ -164,7 +165,7 @@ ___
 
 
 ```powershell
-PS C:\> Find-CMObject -ID "17007122"
+Find-CMObject -ID "17007122"
 ```
 
 Finds any object which has the CI_ID "17007122", this includes applications, deployment types, drivers, configuration items and configuration baselines.
@@ -172,7 +173,7 @@ Finds any object which has the CI_ID "17007122", this includes applications, dep
 ___
 
 ```powershell
-PS C:\> Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
+Find-CMObject -ID "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
 ```
 Finds an application which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D24-77689C53C615/Application_197d8de7-022d-4c0b-aec4-c339ccc17ba4"
 
@@ -188,8 +189,8 @@ Finds an application which matches the ModelName "ScopeId_B3FF3CC4-0319-4434-9D2
 For help, be sure to use `Get-Help` to check out the About help pages or the comment based help in each of functions (which includes examples). Example commands below if you're unsure:
 
 ```powershell
-PS C:\> Get-Help "about_PSCMContentMgmt*"
-PS C:\> Get-Help "Find-CMObject" -Detailed
+Get-Help "about_PSCMContentMgmt*"
+Get-Help "Find-CMObject" -Detailed
 ```
 
 Failing that:

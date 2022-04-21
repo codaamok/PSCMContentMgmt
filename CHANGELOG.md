@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Removed the auto-import of `ConfigurationManager` module, and instead made it a required module in the manifest. This is to better define the dependency and provide a more "traditional" experience. Therefore, you must import the `ConfigurationManager` module before you can use PSCMContentMgmt. 
+- Previously, users did not need to specify `-SiteServer` and `-SiteCode` parameters. This is because variables `$CMSiteServer` and `$CMSiteCode` were automatically defined upon import of PSCMContentMgmt (from attempting to read the registry and WMI to determine where the SMS Provider was and the site code). This behaviour has now changed. You must specify `-SiteServer` and `-SiteCode`, but only for at least one command. The same parameter values are remembered for subsequent commands within the same session. See `README.md` for more details.
 
 ## [1.8.20201016.0] - 2020-10-16
 ### Fixed

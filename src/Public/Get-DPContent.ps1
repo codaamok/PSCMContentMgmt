@@ -27,15 +27,13 @@ function Get-DPContent {
     .PARAMETER Application
         Filter on applications
     .PARAMETER SiteServer
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+        FQDN address of the site server (SMS Provider). 
         
-        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
-        
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-        
-        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         System.String[]
     .OUTPUTS
@@ -80,28 +78,21 @@ function Get-DPContent {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
+        [String]$SiteCode
     )
     begin {
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-        }
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
     }
     process {
         foreach ($TargetDP in $DistributionPoint) {
             switch ($true) {
                 ($LastDP -ne $TargetDP) {
                     try {
-                        Resolve-DP -Name $TargetDP -SiteServer $SiteServer -SiteCode $SiteCode
+                        Resolve-DP -Name $TargetDP -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
                     }
                     catch {
                         Write-Error -ErrorRecord $_
@@ -115,7 +106,7 @@ function Get-DPContent {
                 }
             }
 
-            $Namespace = "ROOT/SMS/Site_{0}" -f $SiteCode
+            $Namespace = "ROOT/SMS/Site_{0}" -f $Script:SiteCode
             $Query = "SELECT * FROM SMS_DPContentInfo WHERE NALPath like '%{0}%'" -f $TargetDP
         
             $conditions = switch ($true) {
@@ -132,14 +123,14 @@ function Get-DPContent {
                 $Query = "{0} AND ( {1} )" -f $Query, ([String]::Join(" OR ", $conditions)) 
             }
         
-            Get-CimInstance -ComputerName $SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
+            Get-CimInstance -ComputerName $Script:SiteServer -Namespace $Namespace -Query $Query | ForEach-Object {
                 [PSCustomObject]@{
                     PSTypeName        = "PSCMContentMgmt"
                     ObjectName        = $_.Name
                     Description       = $_.Description
                     ObjectType        = ([SMS_DPContentInfo]$_.ObjectType).ToString()
                     ObjectID          = $(if ($_.ObjectType -eq [SMS_DPContentInfo]"Application") {
-                        ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $SiteServer -SiteCode $SiteCode
+                        ConvertTo-ModelNameCIID -ModelName $_.ObjectID -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
                     }
                     else {
                         $_.ObjectID

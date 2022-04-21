@@ -11,15 +11,13 @@ function Compare-DPContent {
     .PARAMETER Target
         Name of the differencing distribution point (as it appears in Configuration Manager, usually FQDN) you want to query.
     .PARAMETER SiteServer
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
-
-        Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+        FQDN address of the site server (SMS Provider). 
+        
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter. PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
     .PARAMETER SiteCode
         Site code of which the server specified by -SiteServer belongs to.
 
-        It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-        
-        Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+        You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter. PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
     .INPUTS
         This function does not accept pipeline input.
     .OUTPUTS
@@ -52,33 +50,26 @@ function Compare-DPContent {
 
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteServer = $CMSiteServer,
+        [String]$SiteServer,
         
         [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [String]$SiteCode = $CMSiteCode
+        [String]$SiteCode
     )
     begin {
-        switch ($null) {
-            $SiteCode {
-                Write-Error -Message "Please supply a site code using the -SiteCode parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-            $SiteServer {
-                Write-Error -Message "Please supply a site server FQDN address using the -SiteServer parameter" -Category "InvalidArgument" -ErrorAction "Stop"
-            }
-        }
+        Set-SiteServerAndSiteCode -SiteServer $Local:SiteServer -SiteCode $Local:SiteCode
 
         try {
-            Resolve-DP -Name $Source -SiteServer $SiteServer -SiteCode $SiteCode
-            Resolve-DP -Name $Target -SiteServer $SiteServer -SiteCode $SiteCode
+            Resolve-DP -Name $Source -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
+            Resolve-DP -Name $Target -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
         }
         catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }
     process {
-        $SourceContent = Get-DPContent -DistributionPoint $Source -SiteServer $SiteServer -SiteCode $SiteCode
-        $TargetContent = Get-DPContent -DistributionPoint $Target -SiteServer $SiteServer -SiteCode $SiteCode
+        $SourceContent = Get-DPContent -DistributionPoint $Source -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
+        $TargetContent = Get-DPContent -DistributionPoint $Target -SiteServer $Script:SiteServer -SiteCode $Script:SiteCode
     
         Compare-Object -ReferenceObject @($SourceContent) -DifferenceObject @($TargetContent) -Property ObjectID -PassThru | ForEach-Object {
             if ($_.SideIndicator -eq "<=") {
