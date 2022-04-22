@@ -6,3 +6,4 @@ branches:
 ignore:
   sha: []
 merge-message-formats: {}
+next-version: 2.0.0
