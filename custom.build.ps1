@@ -62,10 +62,11 @@ task PreBuild {
 
 task PostBuild {
     Invoke-BuildClean -Path $BuildRoot\misc
-
-    Get-Module 'ConfigurationManager' -ListAvailable | ForEach-Object {
-        if ($_ -notmatch 'AdminConsole\\bin') {
-            Remove-Item -Path $_.ModuleBase -Recurse -Force -ErrorAction 'Stop'
+    if ($env:USER -ne 'runner') {
+        Get-Module 'ConfigurationManager' -ListAvailable | ForEach-Object {
+            if ($_ -notmatch 'AdminConsole\\bin') {
+                Remove-Item -Path $_.ModuleBase -Recurse -Force -ErrorAction 'Stop'
+            }
         }
     }
 }
@@ -75,5 +76,9 @@ task PreRelease {
 }
 
 task PostRelease {
-
+    Get-Module 'ConfigurationManager' -ListAvailable | ForEach-Object {
+        if ($_ -notmatch 'AdminConsole\\bin') {
+            Remove-Item -Path $_.ModuleBase -Recurse -Force -ErrorAction 'Stop'
+        }
+    }
 }
