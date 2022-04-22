@@ -4,3 +4,4 @@ build/*
 release/*
 .DS_Store
 testResults.xml
+misc/*
