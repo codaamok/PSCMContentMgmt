@@ -10,8 +10,6 @@ schema: 2.0.0
 ## SYNOPSIS
 Imports .pkgx files to the local distribution point found in the given -Folder.
 
-Must be run locally to the distribution point you're importing content to, and run as administrator (ExtractContent.exe requirement).
-
 ## SYNTAX
 
 ```
@@ -24,7 +22,7 @@ Imports .pkgx files to the local distribution point found in the given -Folder.
 
 Must be run locally to the distribution point you're importing content to, and run as administrator (ExtractContent.exe requirement).
 
-It is recommended you first configure your distribution point to allow prestage content (see Set-DPAllowPrestagedContent), distribute the content objects you want to import (see Start-DPContentDistribution) and then you should use Import-DPContent.
+For further guidance on how migrate a distribution point's content library using this function, Export-DPContent and Set-DPAllowPrestagedContent, please read the CONTENT LIBRARY MIRATION section in the About help topic about_PSCMContentMgmt_ExportImport.
 
 Import-DPContent only imports content objects which are in "pending" state in the SMS_PackageStatusDistPointsSummarizer class on the site server (in console, view objects' distribution state in Monitoring \> Distribution Status \> Content Status).
 
@@ -111,9 +109,10 @@ Accept wildcard characters: False
 ```
 
 ### -SiteServer
-It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteServer variable which is the default value for this parameter.
+FQDN address of the site server (SMS Provider). 
 
-Specify this to query an alternative server, or if the module import process was unable to auto-detect and set $CMSiteServer.
+You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter.
+PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
 
 ```yaml
 Type: String
@@ -122,7 +121,7 @@ Aliases:
 
 Required: False
 Position: 3
-Default value: $CMSiteServer
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -130,9 +129,8 @@ Accept wildcard characters: False
 ### -SiteCode
 Site code of which the server specified by -SiteServer belongs to.
 
-It is not usually necessary to specify this parameter as importing the PSCMContentMgr module sets the $CMSiteCode variable which is the default value for this parameter.
-
-Specify this to query an alternative site, or if the module import process was unable to auto-detect and set $CMSiteCode.
+You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter.
+PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
 
 ```yaml
 Type: String
@@ -141,7 +139,7 @@ Aliases:
 
 Required: False
 Position: 4
-Default value: $CMSiteCode
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

@@ -90,7 +90,7 @@ Finds a driver which matches the ModelName "SCOPEID_B3FF3CC4-0319-4434-9D24-7768
 ## PARAMETERS
 
 ### -ID
-{{ Fill ID Description }}
+The ID to search for.
 
 ```yaml
 Type: String[]
@@ -105,7 +105,10 @@ Accept wildcard characters: False
 ```
 
 ### -SiteServer
-{{ Fill SiteServer Description }}
+FQDN address of the site server (SMS Provider). 
+
+You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteServer parameter.
+PSCMContentMgmt remembers the site server for subsequent commands, unless you specify the parameter again to change site server.
 
 ```yaml
 Type: String
@@ -114,13 +117,16 @@ Aliases:
 
 Required: False
 Position: 2
-Default value: $CMSiteServer
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -SiteCode
-{{ Fill SiteCode Description }}
+Site code of which the server specified by -SiteServer belongs to.
+
+You only need to use this parameter once for any function of PSCMContentMgmt that also has a -SiteCode parameter.
+PSCMContentMgmt remembers the site code for subsequent commands, unless you specify the parameter again to change site code.
 
 ```yaml
 Type: String
@@ -129,7 +135,7 @@ Aliases:
 
 Required: False
 Position: 3
-Default value: $CMSiteCode
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
