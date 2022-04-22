@@ -47,6 +47,7 @@ task PreBuild {
                 }
                 Copy-Item @Params
                 $SuccessfullyCopiedModule = $true
+                break
             }
             catch {
                 Write-Warning -Message ('Failed to copy dummy ConfigurationManager module to "{0}" ({1})' -f $ModuleName, $_.Exception.Message)
